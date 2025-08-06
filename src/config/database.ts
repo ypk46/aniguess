@@ -7,7 +7,7 @@ import { config } from './index';
 export const AppDataSource = new DataSource({
   type: 'postgres',
   ...config.database,
-  entities: ['src/models/*.ts'],
+  entities: [__dirname + '/../models/*.ts', __dirname + '/../models/*.js'],
   migrations: ['src/migrations/*.ts'],
   subscribers: ['src/subscribers/*.ts'],
   migrationsRun: false,
