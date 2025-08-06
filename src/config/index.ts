@@ -1,5 +1,5 @@
 import { config as loadEnv } from 'dotenv';
-import { ServerConfig, RedisConfig } from '../types/config';
+import { ServerConfig, RedisConfig, DatabaseConfig } from '../types/config';
 
 // Load environment variables
 loadEnv();
@@ -16,6 +16,9 @@ class Config {
   // Redis configuration
   public readonly redis: RedisConfig;
 
+  // Database configuration
+  public readonly database: DatabaseConfig;
+
   constructor() {
     // Server settings
     this.port = parseInt(process.env.PORT || '3000', 10);
@@ -30,6 +33,18 @@ class Config {
       ),
       maxRetriesPerRequest: parseInt(process.env.REDIS_MAX_RETRIES || '3', 10),
       lazyConnect: process.env.REDIS_LAZY_CONNECT === 'true',
+    };
+
+    // Database settings
+    this.database = {
+      host: process.env.DB_HOST || 'localhost',
+      port: parseInt(process.env.DB_PORT || '5432', 10),
+      username: process.env.DB_USERNAME || 'postgres',
+      password: process.env.DB_PASSWORD || 'password',
+      database: process.env.DB_NAME || 'aniguess',
+      synchronize: process.env.DB_SYNCHRONIZE === 'true',
+      logging: process.env.DB_LOGGING === 'true',
+      ssl: process.env.DB_SSL === 'true',
     };
 
     // Validate required configuration
@@ -59,6 +74,7 @@ class Config {
       port: this.port,
       nodeEnv: this.nodeEnv,
       redis: this.redis,
+      database: this.database,
     };
   }
 
@@ -90,6 +106,7 @@ export const config = new Config();
 // Export individual config sections for convenience
 export const serverConfig = config.getServerConfig();
 export const redisConfig = config.redis;
+export const databaseConfig = config.database;
 
 // Export the class for testing purposes
 export { Config };

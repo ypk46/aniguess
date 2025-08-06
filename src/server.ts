@@ -1,7 +1,9 @@
+import 'reflect-metadata';
 import express, { Request, Response, NextFunction, Application } from 'express';
 import http from 'http';
 import cors from 'cors';
 import redisClient from './config/redis';
+import { initializeDatabase, closeDatabase } from './config/database';
 import { serverConfig } from './config';
 import { routes } from './routes';
 import { createSocketService, SocketService } from './services';
@@ -37,6 +39,10 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction): void => {
 // Start server
 async function startServer(): Promise<void> {
   try {
+    // Initialize database connection
+    await initializeDatabase();
+    console.log('✅ Database connected successfully');
+
     // Test Redis connection
     await redisClient.connect();
     console.log('✅ Redis connected successfully');
@@ -44,6 +50,7 @@ async function startServer(): Promise<void> {
     server.listen(serverConfig.port, (): void => {
       console.log(`🚀 Server running on port ${serverConfig.port}`);
       console.log(`📡 WebSocket server ready`);
+      console.log(`💾 Database connected (PostgreSQL)`);
       console.log(
         `🩺 Health check: http://localhost:${serverConfig.port}/health`
       );
@@ -58,10 +65,16 @@ async function startServer(): Promise<void> {
 // Graceful shutdown
 const gracefulShutdown = async (): Promise<void> => {
   console.log('Shutting down gracefully...');
-  server.close((): void => {
-    redisClient.quit().then(() => {
+  server.close(async (): Promise<void> => {
+    try {
+      await closeDatabase();
+      await redisClient.quit();
+      console.log('✅ All connections closed');
       process.exit(0);
-    });
+    } catch (error) {
+      console.error('❌ Error during shutdown:', error);
+      process.exit(1);
+    }
   });
 };
 
