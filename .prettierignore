@@ -1,0 +1,7 @@
+# Prettier ignore patterns
+node_modules/
+dist/
+*.log
+.env*
+coverage/
+.nyc_output/

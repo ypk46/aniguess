@@ -1,0 +1,58 @@
+{
+  "name": "aniguess",
+  "version": "1.0.0",
+  "description": "A Node.js application with Express, WebSocket, and Redis integration",
+  "main": "dist/server.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "dev": "nodemon --exec ts-node src/server.ts",
+    "dev:watch": "nodemon --watch src --ext ts --exec ts-node src/server.ts",
+    "clean": "rm -rf dist",
+    "type-check": "tsc --noEmit",
+    "format": "prettier --write \"src/**/*.{ts,js,json}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,js,json}\"",
+    "lint": "eslint src --ext .ts",
+    "lint:fix": "eslint src --ext .ts --fix",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "docker:dev": "./scripts/dev-env.sh start",
+    "docker:dev:stop": "./scripts/dev-env.sh stop",
+    "docker:dev:logs": "./scripts/dev-env.sh logs",
+    "docker:dev:status": "./scripts/dev-env.sh status",
+    "docker:dev:cleanup": "./scripts/dev-env.sh cleanup",
+    "docker:build": "docker build -t aniguess:latest ."
+  },
+  "keywords": [
+    "node",
+    "express",
+    "websocket",
+    "redis",
+    "typescript"
+  ],
+  "author": "",
+  "license": "ISC",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "socket.io": "^4.7.5",
+    "redis": "^4.6.13",
+    "dotenv": "^16.4.5",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/cors": "^2.8.17",
+    "@types/node": "^22.0.0",
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-prettier": "^5.2.1",
+    "nodemon": "^3.0.3",
+    "prettier": "^3.3.3",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.4"
+  }
+}
