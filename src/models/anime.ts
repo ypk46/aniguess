@@ -4,7 +4,15 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToMany,
 } from 'typeorm';
+import { Attribute } from './attribute';
+import { Character } from './character';
+
+export enum AnimeStatus {
+  ACTIVE = 'active',
+  INACTIVE = 'inactive',
+}
 
 @Entity('anime')
 export class Anime {
@@ -17,11 +25,14 @@ export class Anime {
   @Column({ type: 'varchar', length: 500, nullable: true })
   imageUrl?: string;
 
-  @Column({ type: 'int', nullable: true })
-  episodes?: number;
+  @Column({ type: 'enum', enum: AnimeStatus, default: AnimeStatus.ACTIVE })
+  status!: AnimeStatus;
 
-  @Column({ type: 'varchar', length: 20, nullable: true })
-  status?: string;
+  @OneToMany(() => Attribute, attribute => attribute.anime)
+  attributes!: Attribute[];
+
+  @OneToMany(() => Character, character => character.anime)
+  characters!: Character[];
 
   @CreateDateColumn()
   createdAt!: Date;

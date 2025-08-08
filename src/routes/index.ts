@@ -1,6 +1,9 @@
 import { Router, Request, Response } from 'express';
 import { healthController } from '../controllers/health';
 import { ErrorResponse } from '../types/responses/common';
+import { animeRoutes } from './anime.routes';
+import { attributeRoutes } from './attribute.routes';
+import { characterRoutes } from './character.routes';
 
 /**
  * Register all application routes.
@@ -12,6 +15,11 @@ export function createRoutes(): Router {
   // Health routes
   router.get('/health', healthController.getHealthStatus);
   router.get('/ping', healthController.ping);
+
+  // API routes
+  router.use('/api/anime', animeRoutes);
+  router.use('/api/attributes', attributeRoutes);
+  router.use('/api/characters', characterRoutes);
 
   // 404 handler for unmatched routes
   router.use('*', (req: Request, res: Response): void => {
