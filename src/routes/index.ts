@@ -4,6 +4,7 @@ import { ErrorResponse } from '../types/responses/common';
 import { animeRoutes } from './anime.routes';
 import { attributeRoutes } from './attribute.routes';
 import { characterRoutes } from './character.routes';
+import { roomRoutes } from './room.routes';
 
 /**
  * Register all application routes.
@@ -20,6 +21,7 @@ export function createRoutes(): Router {
   router.use('/api/anime', animeRoutes);
   router.use('/api/attributes', attributeRoutes);
   router.use('/api/characters', characterRoutes);
+  router.use('/api/rooms', roomRoutes);
 
   // 404 handler for unmatched routes
   router.use('*', (req: Request, res: Response): void => {
