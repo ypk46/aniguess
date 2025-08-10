@@ -1,10 +1,10 @@
 import { Request, Response } from 'express';
 import { RoomService } from '../services/room.service';
 import { ApiResponse } from '../types/responses/common';
-import { CreateRoomRequest } from '../types/room';
+import { CreateRoomRequest, Player } from '../types/room';
 
 interface CreateRoomRequestBody extends CreateRoomRequest {
-  playerId: string;
+  player: Player;
 }
 
 export class RoomController {
@@ -16,11 +16,11 @@ export class RoomController {
 
   createRoom = async (req: Request, res: Response): Promise<void> => {
     try {
-      const { animeId, rounds, roundTimer, playerId }: CreateRoomRequestBody =
+      const { animeId, rounds, roundTimer, player }: CreateRoomRequestBody =
         req.body;
 
       // Basic validation
-      if (!animeId || !rounds || !roundTimer || !playerId) {
+      if (!animeId || !rounds || !roundTimer || !player) {
         const response: ApiResponse = {
           success: false,
           message:
@@ -58,7 +58,7 @@ export class RoomController {
       // Add the creator as the first player
       const roomWithPlayer = await this.roomService.addPlayerToRoom(
         room.code,
-        playerId
+        player
       );
 
       if (!roomWithPlayer) {
@@ -129,12 +129,12 @@ export class RoomController {
   joinRoom = async (req: Request, res: Response): Promise<void> => {
     try {
       const { code } = req.params;
-      const { playerId } = req.body;
+      const { player } = req.body;
 
-      if (!code || !playerId) {
+      if (!code || !player) {
         const response: ApiResponse = {
           success: false,
-          message: 'Room code and playerId are required',
+          message: 'Room code and player are required',
         };
         res.status(400).json(response);
         return;
@@ -142,7 +142,7 @@ export class RoomController {
 
       const room = await this.roomService.addPlayerToRoom(
         code.toUpperCase(),
-        playerId
+        player
       );
 
       if (!room) {

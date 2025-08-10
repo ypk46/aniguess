@@ -1,14 +1,19 @@
 import { Routes } from '@angular/router';
-import { Home } from './pages/home/home';
+import { HomePage } from './pages/home/home';
 import { HowToPlay } from './pages/how-to-play/how-to-play';
+import { RoomPage } from './pages/room/room';
 
 export const routes: Routes = [
   {
-    component: Home,
+    component: HomePage,
     path: '',
   },
   {
     component: HowToPlay,
     path: 'how-to-play',
+  },
+  {
+    component: RoomPage,
+    path: 'room',
   },
 ];

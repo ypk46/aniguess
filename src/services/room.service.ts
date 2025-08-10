@@ -1,5 +1,6 @@
 import redisClient from '../config/redis';
-import { Room, RoomState, CreateRoomRequest } from '../types/room';
+import { Room, RoomState, CreateRoomRequest, Player } from '../types/room';
+import { socketRegistry } from './socket-registry';
 
 export class RoomService {
   private readonly ROOM_KEY_PREFIX = 'room:';
@@ -164,6 +165,9 @@ export class RoomService {
       room.state = state;
       room.updatedAt = updatedAt;
 
+      const socketService = socketRegistry.getSocketService();
+      socketService.broadcast(`room:update:${room.code}`, room);
+
       return room;
     } catch (error) {
       console.error('Error updating room state:', error);
@@ -174,7 +178,7 @@ export class RoomService {
   /**
    * Add player to room
    */
-  async addPlayerToRoom(code: string, playerId: string): Promise<Room | null> {
+  async addPlayerToRoom(code: string, player: Player): Promise<Room | null> {
     try {
       const room = await this.getRoomByCode(code);
       if (!room) {
@@ -187,7 +191,8 @@ export class RoomService {
       }
 
       // Check if player is already in the room
-      if (room.players.includes(playerId)) {
+      const playerIds = room.players.map(player => player.id);
+      if (playerIds.includes(player.id)) {
         throw new Error('Player is already in the room.');
       }
 
@@ -196,7 +201,7 @@ export class RoomService {
         throw new Error('Cannot join room. Room is not in lobby state.');
       }
 
-      room.players.push(playerId);
+      room.players.push(player);
       room.updatedAt = new Date().toISOString();
 
       const roomKey = this.getRoomKey(code);
@@ -204,6 +209,9 @@ export class RoomService {
         players: JSON.stringify(room.players),
         updatedAt: room.updatedAt,
       });
+
+      const socketService = socketRegistry.getSocketService();
+      socketService.broadcast(`room:update:${room.code}`, room);
 
       return room;
     } catch (error) {
@@ -225,7 +233,8 @@ export class RoomService {
         return null;
       }
 
-      const playerIndex = room.players.indexOf(playerId);
+      const playerIds = room.players.map(player => player.id);
+      const playerIndex = playerIds.indexOf(playerId);
       if (playerIndex === -1) {
         throw new Error('Player not found in room.');
       }
@@ -239,10 +248,33 @@ export class RoomService {
         updatedAt: room.updatedAt,
       });
 
+      const socketService = socketRegistry.getSocketService();
+      socketService.broadcast(`room:update:${room.code}`, room);
+
       return room;
     } catch (error) {
       console.error('Error removing player from room:', error);
       throw error;
+    }
+  }
+
+  async removePlayer(playerId: string): Promise<void> {
+    // Get all rooms
+    const roomKeys = await redisClient.keys(`${this.ROOM_KEY_PREFIX}*`);
+    for (const roomKey of roomKeys) {
+      const code = <string>roomKey.split(':')[1];
+      const room = await this.getRoomByCode(code);
+
+      // Remove player from room
+      if (room) {
+        room.players = room.players.filter(player => player.id !== playerId);
+        await redisClient.hSet(roomKey, {
+          players: JSON.stringify(room.players),
+        });
+
+        const socketService = socketRegistry.getSocketService();
+        socketService.broadcast(`room:update:${room.code}`, room);
+      }
     }
   }
 

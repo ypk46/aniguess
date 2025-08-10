@@ -1,17 +1,17 @@
-import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { inject, Injectable } from '@angular/core';
+import { Socket } from 'ngx-socket-io';
+import { BehaviorSubject } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
 })
 export class PlayerService {
+  private socket = inject(Socket);
   private playerIdSubject = new BehaviorSubject<string | null>(null);
+  private playerNameSubject = new BehaviorSubject<string | null>(null);
 
-  /**
-   * Observable stream of the current player ID (socket ID)
-   */
-  public playerId$: Observable<string | null> =
-    this.playerIdSubject.asObservable();
+  public playerId$ = this.playerIdSubject.asObservable();
+  public playerName$ = this.playerNameSubject.asObservable();
 
   /**
    * Sets the player ID (socket ID)
@@ -34,5 +34,31 @@ export class PlayerService {
    */
   clearPlayerId(): void {
     this.playerIdSubject.next(null);
+  }
+
+  /**
+   * Sets the player name
+   * @param name The name to store as player name
+   */
+  setPlayerName(name: string): void {
+    this.socket.emit('present', {
+      playerName: name,
+    });
+    this.playerNameSubject.next(name);
+  }
+
+  /**
+   * Gets the current player name
+   * @returns Current player name or null if not set
+   */
+  getPlayerName(): string | null {
+    return this.playerNameSubject.value;
+  }
+
+  /**
+   * Clears the player name
+   */
+  clearPlayerName(): void {
+    this.playerNameSubject.next(null);
   }
 }

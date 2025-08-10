@@ -10,9 +10,14 @@ export interface Room {
   rounds: number;
   roundTimer: number; // in seconds
   state: RoomState;
-  players: string[]; // array of player IDs/names
+  players: Player[];
   createdAt: string;
   updatedAt: string;
+}
+
+export interface Player {
+  id: string;
+  name: string;
 }
 
 export interface CreateRoomRequest {

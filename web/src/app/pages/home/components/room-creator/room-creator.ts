@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, EventEmitter, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -6,6 +6,7 @@ import {
   Anime,
   PlayerService,
   RoomData,
+  Room,
 } from '../../../../shared';
 import { RoomService } from '../../../../shared/services/room.service';
 
@@ -16,6 +17,9 @@ import { RoomService } from '../../../../shared/services/room.service';
   styleUrl: './room-creator.css',
 })
 export class RoomCreator {
+  @Output() roomCreated = new EventEmitter<Room>();
+
+  playerName: string = '';
   rounds: number = 3;
   roundTimer: number = 120; // In seconds
   selectedAnime: Anime | null = null;
@@ -48,12 +52,16 @@ export class RoomCreator {
       animeId: this.selectedAnime.id,
       rounds: this.rounds,
       roundTimer: this.roundTimer,
-      playerId: playerId,
+      player: {
+        id: playerId,
+        name: this.playerName,
+      },
     };
 
     this.roomService.createRoom(roomData).subscribe({
-      next: (result) => {
-        console.log('Room created successfully:', result);
+      next: (room) => {
+        this.playerService.setPlayerName(this.playerName);
+        this.roomCreated.emit(room);
       },
       error: (error) => {
         console.error('Error creating room:', error);

@@ -9,11 +9,11 @@
     </p>
   </div>
   <!-- Create room -->
-  <app-room-creator></app-room-creator>
+  <app-room-creator (roomCreated)="onNewRoom($event)"></app-room-creator>
 
   <!-- Spacer -->
   <div class="mb-6"></div>
 
   <!-- Join room -->
-  <app-room-joiner></app-room-joiner>
+  <app-room-joiner (roomJoined)="onNewRoom($event)"></app-room-joiner>
 </div>

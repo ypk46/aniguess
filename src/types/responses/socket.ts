@@ -8,12 +8,6 @@ export interface WelcomeMessage {
   timestamp: string;
 }
 
-export interface SocketMessage {
-  echo?: boolean;
-  originalMessage?: unknown;
-  timestamp: string;
-}
-
 export interface PongMessage {
   timestamp: string;
 }

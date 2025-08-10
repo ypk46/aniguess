@@ -1,10 +1,8 @@
 import { Server as SocketIOServer, Socket } from 'socket.io';
 import { Server as HttpServer } from 'http';
-import {
-  WelcomeMessage,
-  SocketMessage,
-  PongMessage,
-} from '../types/responses/socket';
+import { WelcomeMessage, PongMessage } from '../types/responses/socket';
+import redisClient from '../config/redis';
+import { RoomService } from './room.service';
 
 /**
  * Socket Service
@@ -30,10 +28,8 @@ export class SocketService {
    */
   private initializeSocketHandlers(): void {
     this.io.on('connection', (socket: Socket): void => {
-      console.log(`Client connected: ${socket.id}`);
-
       this.handleConnection(socket);
-      this.handleMessages(socket);
+      this.handlePresent(socket);
       this.handlePing(socket);
       this.handleDisconnection(socket);
       this.handleErrors(socket);
@@ -55,20 +51,12 @@ export class SocketService {
   }
 
   /**
-   * Handle client messages
+   * Handle player presence
    */
-  private handleMessages(socket: Socket): void {
-    socket.on('message', (data: unknown): void => {
-      console.log(`Message from ${socket.id}:`, data);
-
-      // Echo the message back to the sender
-      const messageResponse: SocketMessage = {
-        echo: true,
-        originalMessage: data,
-        timestamp: new Date().toISOString(),
-      };
-
-      socket.emit('message', messageResponse);
+  private handlePresent(socket: Socket): void {
+    socket.on('present', (data: { playerName: string }): void => {
+      // Store player name link to its socket ID (player ID)
+      redisClient.set(socket.id, data.playerName);
     });
   }
 
@@ -89,7 +77,9 @@ export class SocketService {
    * Handle client disconnections
    */
   private handleDisconnection(socket: Socket): void {
+    const roomService = new RoomService();
     socket.on('disconnect', (reason: string): void => {
+      roomService.removePlayer(socket.id);
       console.log(`Client disconnected: ${socket.id}, reason: ${reason}`);
     });
   }

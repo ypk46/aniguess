@@ -1,8 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, EventEmitter, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { RoomService } from '../../../../shared/services/room.service';
-import { PlayerService } from '../../../../shared';
+import { PlayerService, Room } from '../../../../shared';
 
 @Component({
   selector: 'app-room-joiner',
@@ -11,7 +11,10 @@ import { PlayerService } from '../../../../shared';
   styleUrl: './room-joiner.css',
 })
 export class RoomJoiner {
-  roomCode: string = '';
+  @Output() roomJoined = new EventEmitter<Room>();
+
+  playerName: string = 'Naruto';
+  roomCode: string = '0KIX4U';
   errorMessage: string = '';
 
   constructor(
@@ -27,13 +30,16 @@ export class RoomJoiner {
       this.errorMessage = 'Failed to retrieve player ID.';
       return;
     }
-    this.roomService.joinRoom(this.roomCode, playerId).subscribe({
-      next: () => {
-        // Handle successful room join
-      },
-      error: (err) => {
-        this.errorMessage = 'Failed to join room: ' + err.message;
-      },
-    });
+    this.roomService
+      .joinRoom(this.roomCode, { id: playerId, name: this.playerName })
+      .subscribe({
+        next: (room) => {
+          this.playerService.setPlayerName(this.playerName);
+          this.roomJoined.emit(room);
+        },
+        error: (err) => {
+          this.errorMessage = 'Failed to join room: ' + err.message;
+        },
+      });
   }
 }

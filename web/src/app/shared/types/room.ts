@@ -2,13 +2,18 @@ export interface RoomData {
   animeId: string;
   rounds: number;
   roundTimer: number;
-  playerId: string;
+  player: Player;
+}
+
+export interface Player {
+  id: string;
+  name: string;
 }
 
 export interface Room {
   animeId: string;
   code: string;
-  players: string[];
+  players: Player[];
   roundTimer: number;
   rounds: number;
   state: 'lobby' | 'active' | 'finished';

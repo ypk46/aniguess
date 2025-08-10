@@ -4,6 +4,21 @@
   (ngSubmit)="onSubmit()"
   #roomForm="ngForm"
 >
+  <div class="mb-4">
+    <label class="text-white text-sm font-medium mb-2 block" for="playerName">
+      Player Name
+    </label>
+    <input
+      type="text"
+      id="playerName"
+      name="playerName"
+      [(ngModel)]="playerName"
+      required
+      class="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-colors"
+      [class.border-red-500]="roomForm.submitted && !playerName"
+    />
+  </div>
+
   <div class="mb-6">
     <label for="roomCode" class="block text-white mb-2">Room Code</label>
     <input

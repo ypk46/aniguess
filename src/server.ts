@@ -6,7 +6,7 @@ import redisClient from './config/redis';
 import { initializeDatabase, closeDatabase } from './config/database';
 import { serverConfig } from './config';
 import { routes } from './routes';
-import { createSocketService, SocketService } from './services';
+import { createSocketService, SocketService, socketRegistry } from './services';
 import { ErrorResponse } from './types/responses';
 
 const app: Application = express();
@@ -14,6 +14,9 @@ const server = http.createServer(app);
 
 // Initialize Socket service
 const socketService: SocketService = createSocketService(server);
+
+// Register socket service in the registry for dependency injection
+socketRegistry.setSocketService(socketService);
 
 // Middleware
 app.use(cors());

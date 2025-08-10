@@ -1,0 +1,15 @@
+<div class="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
+  @if (room && room.state == "lobby") {
+    <div class="bg-gray-800 p-4 rounded-lg">
+      <h2 class="text-white text-lg font-medium mb-2">Lobby</h2>
+      <p class="text-gray-400">Waiting for players to join...</p>
+    </div>
+
+    <!-- Players -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mt-4">
+      @for (player of room.players; track player.id) {
+        <app-player-card [player]="player"></app-player-card>
+      }
+    </div>
+  }
+</div>
