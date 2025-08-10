@@ -17,5 +17,5 @@ export interface Room {
   owner: string;
   roundTimer: number;
   rounds: number;
-  state: 'lobby' | 'active' | 'finished';
+  state: 'lobby' | 'in_progress' | 'finished';
 }

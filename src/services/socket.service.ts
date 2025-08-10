@@ -1,8 +1,8 @@
 import { Server as SocketIOServer, Socket } from 'socket.io';
 import { Server as HttpServer } from 'http';
 import { WelcomeMessage, PongMessage } from '../types/responses/socket';
-import redisClient from '../config/redis';
 import { RoomService } from './room.service';
+import { RoomState } from '../types/room';
 
 /**
  * Socket Service
@@ -29,7 +29,7 @@ export class SocketService {
   private initializeSocketHandlers(): void {
     this.io.on('connection', (socket: Socket): void => {
       this.handleConnection(socket);
-      this.handlePresent(socket);
+      this.handleGameStart(socket);
       this.handlePing(socket);
       this.handleDisconnection(socket);
       this.handleErrors(socket);
@@ -53,11 +53,18 @@ export class SocketService {
   /**
    * Handle player presence
    */
-  private handlePresent(socket: Socket): void {
-    socket.on('present', (data: { playerName: string }): void => {
-      // Store player name link to its socket ID (player ID)
-      redisClient.set(socket.id, data.playerName);
-    });
+  private handleGameStart(socket: Socket): void {
+    const roomService = new RoomService();
+
+    socket.on(
+      'game-start',
+      async (data: { roomCode: string }): Promise<void> => {
+        const { roomCode } = data;
+
+        // Start the game in the specified room
+        await roomService.updateRoomState(roomCode, RoomState.IN_PROGRESS);
+      }
+    );
   }
 
   /**

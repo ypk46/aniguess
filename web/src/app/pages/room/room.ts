@@ -18,17 +18,18 @@ export class RoomPage implements OnInit {
   private playerService = inject(PlayerService);
   private router = inject(Router);
   private socket = inject(Socket);
-  room: Room | null = null;
+  room!: Room;
   playerName: string | null = null;
   playerId: string | null = null;
   playerNameNotSet = true;
 
   ngOnInit() {
-    this.room = this.roomService.getRoom();
-    if (!this.room) {
+    const room = this.roomService.getRoom();
+    if (!room) {
       this.router.navigate(['/']);
       return;
     }
+    this.room = room;
 
     this.playerName = this.playerService.getPlayerName();
     this.playerId = this.playerService.getPlayerId();
@@ -36,5 +37,10 @@ export class RoomPage implements OnInit {
     this.socket.on(`room:update:${this.room.code}`, (room: Room) => {
       this.room = room;
     });
+  }
+
+  onGameStart() {
+    if (!this.room) return;
+    this.socket.emit('game-start', { roomCode: this.room.code });
   }
 }
