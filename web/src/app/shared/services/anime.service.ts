@@ -3,12 +3,13 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { Anime, PaginatedResponse } from '../types';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AnimeService {
-  private readonly apiUrl = 'http://localhost:3000/api/anime';
+  private readonly apiUrl = `${environment.apiUrl}/anime`;
 
   constructor(private http: HttpClient) {}
 
