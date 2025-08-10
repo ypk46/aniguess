@@ -11,6 +11,7 @@ export interface Room {
   roundTimer: number; // in seconds
   state: RoomState;
   players: Player[];
+  owner: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -24,4 +25,5 @@ export interface CreateRoomRequest {
   animeId: string;
   rounds: number;
   roundTimer: number;
+  playerId: string;
 }

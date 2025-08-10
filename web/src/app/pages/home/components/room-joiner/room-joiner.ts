@@ -13,8 +13,8 @@ import { PlayerService, Room } from '../../../../shared';
 export class RoomJoiner {
   @Output() roomJoined = new EventEmitter<Room>();
 
-  playerName: string = 'Naruto';
-  roomCode: string = '0KIX4U';
+  playerName: string = 'Luffy';
+  roomCode: string = '36YU14';
   errorMessage: string = '';
 
   constructor(

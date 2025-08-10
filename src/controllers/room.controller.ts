@@ -53,6 +53,7 @@ export class RoomController {
         animeId,
         rounds,
         roundTimer,
+        playerId: player.id,
       });
 
       // Add the creator as the first player

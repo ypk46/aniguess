@@ -41,9 +41,6 @@ export class PlayerService {
    * @param name The name to store as player name
    */
   setPlayerName(name: string): void {
-    this.socket.emit('present', {
-      playerName: name,
-    });
     this.playerNameSubject.next(name);
   }
 

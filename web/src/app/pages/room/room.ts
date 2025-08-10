@@ -20,6 +20,7 @@ export class RoomPage implements OnInit {
   private socket = inject(Socket);
   room: Room | null = null;
   playerName: string | null = null;
+  playerId: string | null = null;
   playerNameNotSet = true;
 
   ngOnInit() {
@@ -30,6 +31,7 @@ export class RoomPage implements OnInit {
     }
 
     this.playerName = this.playerService.getPlayerName();
+    this.playerId = this.playerService.getPlayerId();
 
     this.socket.on(`room:update:${this.room.code}`, (room: Room) => {
       this.room = room;

@@ -72,6 +72,7 @@ export class RoomService {
         rounds: roomData.rounds,
         roundTimer: roomData.roundTimer,
         state: RoomState.LOBBY,
+        owner: roomData.playerId,
         players: [],
         createdAt: now,
         updatedAt: now,
@@ -85,6 +86,7 @@ export class RoomService {
         rounds: room.rounds.toString(),
         roundTimer: room.roundTimer.toString(),
         state: room.state,
+        owner: room.owner,
         players: JSON.stringify(room.players),
         createdAt: room.createdAt,
         updatedAt: room.updatedAt,
@@ -120,7 +122,8 @@ export class RoomService {
         !roomData.roundTimer ||
         !roomData.state ||
         !roomData.createdAt ||
-        !roomData.updatedAt
+        !roomData.updatedAt ||
+        !roomData.owner
       ) {
         console.error('Invalid room data structure in Redis');
         return null;
@@ -133,6 +136,7 @@ export class RoomService {
         roundTimer: parseInt(roomData.roundTimer, 10),
         state: roomData.state as RoomState,
         players: JSON.parse(roomData.players || '[]'),
+        owner: roomData.owner,
         createdAt: roomData.createdAt,
         updatedAt: roomData.updatedAt,
       };
@@ -201,6 +205,10 @@ export class RoomService {
         throw new Error('Cannot join room. Room is not in lobby state.');
       }
 
+      if (room.players.length === 0) {
+        room.owner = player.id;
+      }
+
       room.players.push(player);
       room.updatedAt = new Date().toISOString();
 
@@ -208,6 +216,7 @@ export class RoomService {
       await redisClient.hSet(roomKey, {
         players: JSON.stringify(room.players),
         updatedAt: room.updatedAt,
+        owner: room.owner,
       });
 
       const socketService = socketRegistry.getSocketService();

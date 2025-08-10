@@ -14,6 +14,7 @@ export interface Room {
   animeId: string;
   code: string;
   players: Player[];
+  owner: string;
   roundTimer: number;
   rounds: number;
   state: 'lobby' | 'active' | 'finished';

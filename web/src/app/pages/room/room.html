@@ -11,5 +11,16 @@
         <app-player-card [player]="player"></app-player-card>
       }
     </div>
+
+    @if (room.owner == playerId) {
+      <div class="mt-4">
+        <button
+          class="w-full bg-primary hover:bg-primary-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-black py-3 px-4 rounded-lg font-medium disabled:text-white transition-colors"
+          [disabled]="room.players.length < 2"
+        >
+          Start Game
+        </button>
+      </div>
+    }
   }
 </div>
