@@ -178,7 +178,7 @@ export class RoomService {
       room.updatedAt = updatedAt;
 
       const socketService = socketRegistry.getSocketService();
-      socketService.broadcast(`room:update:${room.code}`, room);
+      socketService.broadcastToRoom(room.code, 'room:update', room);
 
       return room;
     } catch (error) {
@@ -228,7 +228,8 @@ export class RoomService {
       });
 
       const socketService = socketRegistry.getSocketService();
-      socketService.broadcast(`room:update:${room.code}`, room);
+      socketService.joinSocketToRoom(player.id, room.code);
+      socketService.broadcastToRoom(room.code, 'room:update', room);
 
       return room;
     } catch (error) {
@@ -266,7 +267,7 @@ export class RoomService {
       });
 
       const socketService = socketRegistry.getSocketService();
-      socketService.broadcast(`room:update:${room.code}`, room);
+      socketService.broadcastToRoom(room.code, 'room:update', room);
 
       return room;
     } catch (error) {
@@ -290,7 +291,7 @@ export class RoomService {
         });
 
         const socketService = socketRegistry.getSocketService();
-        socketService.broadcast(`room:update:${room.code}`, room);
+        socketService.broadcastToRoom(room.code, 'room:update', room);
       }
     }
   }

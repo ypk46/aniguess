@@ -19,6 +19,7 @@ export class RoomPage implements OnInit {
   private router = inject(Router);
   private socket = inject(Socket);
   room!: Room;
+  currentRound = 1;
   playerName: string | null = null;
   playerId: string | null = null;
   playerNameNotSet = true;
@@ -34,7 +35,7 @@ export class RoomPage implements OnInit {
     this.playerName = this.playerService.getPlayerName();
     this.playerId = this.playerService.getPlayerId();
 
-    this.socket.on(`room:update:${this.room.code}`, (room: Room) => {
+    this.socket.on('room:update', (room: Room) => {
       this.room = room;
     });
   }

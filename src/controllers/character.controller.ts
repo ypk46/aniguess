@@ -221,4 +221,42 @@ export class CharacterController {
       res.status(500).json(response);
     }
   };
+
+  getCharacterNamesForAnime = async (
+    req: Request,
+    res: Response
+  ): Promise<void> => {
+    try {
+      const { animeId } = req.params;
+
+      if (!animeId) {
+        const response: ApiResponse = {
+          success: false,
+          message: 'Anime ID is required',
+        };
+        res.status(400).json(response);
+        return;
+      }
+
+      const characterNames =
+        await this.characterService.getCachedCharacterNames(animeId);
+
+      const response: ApiResponse = {
+        success: true,
+        result: characterNames,
+      };
+
+      res.status(200).json(response);
+    } catch (error) {
+      console.error(
+        'Error in CharacterController.getCharacterNamesForAnime:',
+        error
+      );
+      const response: ApiResponse = {
+        success: false,
+        message: 'Failed to fetch character names',
+      };
+      res.status(500).json(response);
+    }
+  };
 }

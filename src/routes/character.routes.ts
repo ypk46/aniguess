@@ -13,6 +13,12 @@ router.get('/:id', characterController.getCharacterById);
 // GET /api/characters/anime/:animeId - Get characters by anime ID
 router.get('/anime/:animeId', characterController.getCharactersByAnimeId);
 
+// GET /api/characters/anime/:animeId/names - Get character names for autocomplete
+router.get(
+  '/anime/:animeId/names',
+  characterController.getCharacterNamesForAnime
+);
+
 // POST /api/characters - Create new character
 router.post('/', characterController.createCharacter);
 

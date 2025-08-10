@@ -71,6 +71,9 @@ export class SocketService {
             return;
           }
 
+          // Cache all characters for the anime (for fast lookups during game)
+          await characterService.cacheCharactersForAnime(room.animeId);
+
           // Fetch random characters for the game based on the number of rounds
           const secretCharacters =
             await characterService.getRandomCharactersByAnimeId(
@@ -168,6 +171,35 @@ export class SocketService {
    */
   public close(): void {
     this.io.close();
+  }
+
+  /**
+   * Join a socket to a room
+   */
+  public joinSocketToRoom(socketId: string, roomCode: string): void {
+    const socket = this.io.sockets.sockets.get(socketId);
+    if (socket) {
+      socket.join(`room:${roomCode}`);
+      console.log(`Socket ${socketId} joined room ${roomCode}`);
+    }
+  }
+
+  /**
+   * Remove a socket from a room
+   */
+  public leaveSocketFromRoom(socketId: string, roomCode: string): void {
+    const socket = this.io.sockets.sockets.get(socketId);
+    if (socket) {
+      socket.leave(`room:${roomCode}`);
+      console.log(`Socket ${socketId} left room ${roomCode}`);
+    }
+  }
+
+  /**
+   * Broadcast a message to all clients in a specific room
+   */
+  public broadcastToRoom(roomCode: string, event: string, data: any): void {
+    this.io.to(`room:${roomCode}`).emit(event, data);
   }
 }
 
