@@ -1,0 +1,45 @@
+<nav
+  class="bg-black shadow-md fixed top-0 left-0 right-0 z-50 h-16 border-b"
+  style="border-bottom-color: #e5e8eb"
+>
+  <div
+    class="flex justify-between items-center max-w-6xl mx-auto h-full px-4 md:px-5"
+  >
+    <!-- Left side - Logo and Application title -->
+    <div class="flex items-center">
+      <a
+        routerLink="/"
+        class="flex items-center gap-2 text-white text-xl md:text-2xl font-bold"
+      >
+        <img
+          src="/imgs/logo.png"
+          alt="AniGuess Logo"
+          class="h-8 w-8 md:h-10 md:w-10 object-contain"
+        />
+        AniGuess
+      </a>
+    </div>
+
+    <!-- Right side - Menu items -->
+    <div class="flex items-center">
+      <ul class="flex list-none m-0 p-0 gap-3 md:gap-5">
+        <li class="flex items-center">
+          <a
+            routerLink="/"
+            class="text-white px-3 md:px-4 py-2 font-medium text-sm md:text-base hover:text-green-800 transition-all duration-300"
+          >
+            Home
+          </a>
+        </li>
+        <li class="flex items-center">
+          <a
+            routerLink="/how-to-play"
+            class="text-white px-3 md:px-4 py-2 font-medium text-sm md:text-base hover:text-green-800 transition-all duration-300"
+          >
+            How to Play
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
