@@ -83,4 +83,22 @@ export class CharacterRepository {
       throw error;
     }
   }
+
+  async findRandomByAnimeId(
+    animeId: string,
+    count: number
+  ): Promise<Character[]> {
+    try {
+      return await this.repository
+        .createQueryBuilder('character')
+        .leftJoinAndSelect('character.anime', 'anime')
+        .where('character.animeId = :animeId', { animeId })
+        .orderBy('RANDOM()')
+        .limit(count)
+        .getMany();
+    } catch (error) {
+      console.error('Error fetching random characters by anime id:', error);
+      throw error;
+    }
+  }
 }

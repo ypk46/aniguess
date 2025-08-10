@@ -67,4 +67,19 @@ export class CharacterService {
       throw error;
     }
   }
+
+  async getRandomCharactersByAnimeId(
+    animeId: string,
+    count: number
+  ): Promise<Character[]> {
+    try {
+      return await this.characterRepository.findRandomByAnimeId(animeId, count);
+    } catch (error) {
+      console.error(
+        'Error in CharacterService.getRandomCharactersByAnimeId:',
+        error
+      );
+      throw error;
+    }
+  }
 }

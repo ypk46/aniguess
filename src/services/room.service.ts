@@ -4,6 +4,7 @@ import { socketRegistry } from './socket-registry';
 
 export class RoomService {
   private readonly ROOM_KEY_PREFIX = 'room:';
+  private readonly SECRET_CHARACTERS_KEY_PREFIX = 'room_secret:';
   private readonly ROOM_TTL = 3600 * 4; // 4 hours in seconds
   private readonly ROOM_CODE_LENGTH = 6;
 
@@ -41,6 +42,13 @@ export class RoomService {
    */
   private getRoomKey(code: string): string {
     return `${this.ROOM_KEY_PREFIX}${code}`;
+  }
+
+  /**
+   * Generate secret characters key for Redis
+   */
+  private getSecretCharactersKey(code: string): string {
+    return `${this.SECRET_CHARACTERS_KEY_PREFIX}${code}`;
   }
 
   /**
@@ -293,10 +301,14 @@ export class RoomService {
   async deleteRoom(code: string): Promise<boolean> {
     try {
       const roomKey = this.getRoomKey(code);
-      const result = await redisClient.del(roomKey);
+      const secretKey = this.getSecretCharactersKey(code);
+
+      // Delete both room and secret characters
+      const roomResult = await redisClient.del(roomKey);
+      await redisClient.del(secretKey); // Don't check result for secret characters as they might not exist
 
       console.log(`Room ${code} deleted`);
-      return result === 1;
+      return roomResult === 1;
     } catch (error) {
       console.error('Error deleting room:', error);
       throw error;
@@ -312,6 +324,41 @@ export class RoomService {
       return await redisClient.ttl(roomKey);
     } catch (error) {
       console.error('Error getting room TTL:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Store secret characters for a room
+   */
+  async storeSecretCharacters(code: string, characters: any[]): Promise<void> {
+    try {
+      const secretKey = this.getSecretCharactersKey(code);
+      await redisClient.set(secretKey, JSON.stringify(characters));
+
+      // Set TTL for secret characters (same as room TTL)
+      await redisClient.expire(secretKey, this.ROOM_TTL);
+    } catch (error) {
+      console.error('Error storing secret characters:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get secret characters for a room
+   */
+  async getSecretCharacters(code: string): Promise<any[] | null> {
+    try {
+      const secretKey = this.getSecretCharactersKey(code);
+      const charactersData = await redisClient.get(secretKey);
+
+      if (!charactersData) {
+        return null;
+      }
+
+      return JSON.parse(charactersData);
+    } catch (error) {
+      console.error('Error getting secret characters:', error);
       throw error;
     }
   }

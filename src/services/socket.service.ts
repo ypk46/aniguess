@@ -2,6 +2,7 @@ import { Server as SocketIOServer, Socket } from 'socket.io';
 import { Server as HttpServer } from 'http';
 import { WelcomeMessage, PongMessage } from '../types/responses/socket';
 import { RoomService } from './room.service';
+import { CharacterService } from './character.service';
 import { RoomState } from '../types/room';
 
 /**
@@ -51,18 +52,52 @@ export class SocketService {
   }
 
   /**
-   * Handle player presence
+   * Handle game start
    */
   private handleGameStart(socket: Socket): void {
     const roomService = new RoomService();
+    const characterService = new CharacterService();
 
     socket.on(
       'game-start',
       async (data: { roomCode: string }): Promise<void> => {
-        const { roomCode } = data;
+        try {
+          const { roomCode } = data;
 
-        // Start the game in the specified room
-        await roomService.updateRoomState(roomCode, RoomState.IN_PROGRESS);
+          // Get room details to fetch anime ID and number of rounds
+          const room = await roomService.getRoomByCode(roomCode);
+          if (!room) {
+            socket.emit('error', { message: 'Room not found' });
+            return;
+          }
+
+          // Fetch random characters for the game based on the number of rounds
+          const secretCharacters =
+            await characterService.getRandomCharactersByAnimeId(
+              room.animeId,
+              room.rounds
+            );
+
+          if (secretCharacters.length < room.rounds) {
+            socket.emit('error', {
+              message: `Not enough characters available for ${room.rounds} rounds. Only ${secretCharacters.length} characters found.`,
+            });
+            return;
+          }
+
+          // Store secret characters in Redis (separate from room data)
+          await roomService.storeSecretCharacters(roomCode, secretCharacters);
+
+          // Start the game in the specified room
+          await roomService.updateRoomState(roomCode, RoomState.IN_PROGRESS);
+
+          console.log(
+            `Game started for room ${roomCode} with ${secretCharacters.length} secret characters`
+          );
+        } catch (error) {
+          console.error('Error starting game:', error);
+          socket.emit('error', { message: 'Failed to start game' });
+        }
       }
     );
   }
