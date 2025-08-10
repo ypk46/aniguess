@@ -238,12 +238,12 @@ export class CharacterController {
         return;
       }
 
-      const characterNames =
+      const characterData =
         await this.characterService.getCachedCharacterNames(animeId);
 
       const response: ApiResponse = {
         success: true,
-        result: characterNames,
+        result: characterData,
       };
 
       res.status(200).json(response);

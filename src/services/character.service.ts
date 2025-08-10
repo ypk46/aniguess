@@ -111,7 +111,7 @@ export class CharacterService {
 
       // Cache each character as a Redis Hash
       const pipeline = redisClient.multi();
-      const characterNames: string[] = [];
+      const characterData: Array<{ id: string; name: string }> = [];
 
       for (const character of characters) {
         const characterKey = `${this.CHARACTER_KEY_PREFIX}${character.id}`;
@@ -139,13 +139,13 @@ export class CharacterService {
         pipeline.hSet(characterKey, hashFields);
         pipeline.expire(characterKey, this.CHARACTER_CACHE_TTL);
 
-        // Collect character names for the set
-        characterNames.push(character.name);
+        // Collect character data for autocomplete
+        characterData.push({ id: character.id, name: character.name });
       }
 
-      // Store character names in a set for autocomplete
-      if (characterNames.length > 0) {
-        pipeline.sAdd(animeCharactersKey, characterNames);
+      // Store character data as JSON for autocomplete
+      if (characterData.length > 0) {
+        pipeline.set(animeCharactersKey, JSON.stringify(characterData));
         pipeline.expire(animeCharactersKey, this.CHARACTER_CACHE_TTL);
       }
 
@@ -181,13 +181,21 @@ export class CharacterService {
   }
 
   /**
-   * Get all character names for an anime from Redis cache (for autocomplete)
+   * Get all character data for an anime from Redis cache (for autocomplete)
    */
-  async getCachedCharacterNames(animeId: string): Promise<string[]> {
+  async getCachedCharacterNames(
+    animeId: string
+  ): Promise<Array<{ id: string; name: string }>> {
     try {
       const animeCharactersKey = `${this.ANIME_CHARACTERS_KEY_PREFIX}${animeId}`;
-      const characterNames = await redisClient.sMembers(animeCharactersKey);
-      return characterNames;
+      const characterDataJson = await redisClient.get(animeCharactersKey);
+
+      if (!characterDataJson) {
+        return [];
+      }
+
+      const characterData = JSON.parse(characterDataJson);
+      return Array.isArray(characterData) ? characterData : [];
     } catch (error) {
       console.error('Error getting cached character names:', error);
       throw error;
@@ -209,7 +217,7 @@ export class CharacterService {
         pipeline.del(characterKey);
       }
 
-      // Delete the anime characters set
+      // Delete the anime characters data
       const animeCharactersKey = `${this.ANIME_CHARACTERS_KEY_PREFIX}${animeId}`;
       pipeline.del(animeCharactersKey);
 

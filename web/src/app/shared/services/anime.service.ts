@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { Anime, PaginatedResponse } from '../types';
+import { Anime, CharacterAutocomplete, PaginatedResponse } from '../types';
 import { environment } from '../../../environments/environment';
 
 @Injectable({
@@ -34,13 +34,15 @@ export class AnimeService {
   }
 
   /**
-   * Get character names for an anime (for autocomplete)
+   * Get character names and IDs for an anime (for autocomplete)
    */
-  getCharacterNamesForAnime(animeId: string): Observable<string[]> {
+  getCharacterNamesForAnime(
+    animeId: string,
+  ): Observable<CharacterAutocomplete[]> {
     return this.http
       .get<{
         success: boolean;
-        result?: string[];
+        result?: CharacterAutocomplete[];
       }>(`${environment.apiUrl}/characters/anime/${animeId}/names`)
       .pipe(map((response) => response.result || []));
   }

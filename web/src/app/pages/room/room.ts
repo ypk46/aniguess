@@ -1,7 +1,7 @@
 import { Component, inject, OnInit, HostListener } from '@angular/core';
 import { RoomService } from '../../shared/services/room.service';
 import { AnimeService } from '../../shared/services/anime.service';
-import { PlayerService, Room } from '../../shared';
+import { PlayerService, Room, CharacterAutocomplete } from '../../shared';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -28,8 +28,9 @@ export class RoomPage implements OnInit {
 
   // Character guess functionality
   guessInput = '';
-  characterNames: string[] = [];
-  filteredCharacterNames: string[] = [];
+  selectedCharacterId: string | null = null;
+  characters: CharacterAutocomplete[] = [];
+  filteredCharacters: CharacterAutocomplete[] = [];
   showSuggestions = false;
   selectedSuggestionIndex = -1;
 
@@ -48,7 +49,7 @@ export class RoomPage implements OnInit {
       this.room = room;
 
       // Load character names when game starts
-      if (room.state === 'in_progress' && this.characterNames.length === 0) {
+      if (room.state === 'in_progress' && this.characters.length === 0) {
         this.loadCharacterNames();
       }
     });
@@ -57,8 +58,8 @@ export class RoomPage implements OnInit {
   loadCharacterNames() {
     if (this.room?.animeId) {
       this.animeService.getCharacterNamesForAnime(this.room.animeId).subscribe({
-        next: (names) => {
-          this.characterNames = names;
+        next: (characters) => {
+          this.characters = characters;
         },
         error: (error) => {
           console.error('Error loading character names:', error);
@@ -70,18 +71,36 @@ export class RoomPage implements OnInit {
   onGuessInputChange() {
     const query = this.guessInput.toLowerCase().trim();
 
+    // Clear selected character if input doesn't match
+    if (this.selectedCharacterId) {
+      const selectedCharacter = this.characters.find(
+        (c) => c.id === this.selectedCharacterId,
+      );
+      if (!selectedCharacter || selectedCharacter.name !== this.guessInput) {
+        this.selectedCharacterId = null;
+      }
+    }
+
     if (query.length === 0) {
-      this.filteredCharacterNames = [];
+      this.filteredCharacters = [];
       this.showSuggestions = false;
       this.selectedSuggestionIndex = -1;
       return;
     }
 
-    this.filteredCharacterNames = this.characterNames
-      .filter((name) => name.toLowerCase().includes(query))
+    // Check for exact match and auto-select
+    const exactMatch = this.characters.find(
+      (character) => character.name.toLowerCase() === query,
+    );
+    if (exactMatch && !this.selectedCharacterId) {
+      this.selectedCharacterId = exactMatch.id;
+    }
+
+    this.filteredCharacters = this.characters
+      .filter((character) => character.name.toLowerCase().includes(query))
       .slice(0, 10); // Limit to 10 suggestions
 
-    this.showSuggestions = this.filteredCharacterNames.length > 0;
+    this.showSuggestions = this.filteredCharacters.length > 0 && !exactMatch;
     this.selectedSuggestionIndex = -1;
   }
 
@@ -93,7 +112,7 @@ export class RoomPage implements OnInit {
         event.preventDefault();
         this.selectedSuggestionIndex = Math.min(
           this.selectedSuggestionIndex + 1,
-          this.filteredCharacterNames.length - 1,
+          this.filteredCharacters.length - 1,
         );
         break;
       case 'ArrowUp':
@@ -107,7 +126,7 @@ export class RoomPage implements OnInit {
         event.preventDefault();
         if (this.selectedSuggestionIndex >= 0) {
           this.selectCharacter(
-            this.filteredCharacterNames[this.selectedSuggestionIndex],
+            this.filteredCharacters[this.selectedSuggestionIndex],
           );
         } else {
           this.submitGuess();
@@ -120,8 +139,9 @@ export class RoomPage implements OnInit {
     }
   }
 
-  selectCharacter(characterName: string) {
-    this.guessInput = characterName;
+  selectCharacter(character: CharacterAutocomplete) {
+    this.guessInput = character.name;
+    this.selectedCharacterId = character.id;
     this.showSuggestions = false;
     this.selectedSuggestionIndex = -1;
   }
@@ -131,11 +151,27 @@ export class RoomPage implements OnInit {
       return;
     }
 
-    // TODO: Emit guess to server
-    console.log('Guessing:', this.guessInput);
+    // If no character is selected, try to find exact match
+    if (!this.selectedCharacterId) {
+      const exactMatch = this.characters.find(
+        (character) =>
+          character.name.toLowerCase() === this.guessInput.toLowerCase(),
+      );
+      if (exactMatch) {
+        this.selectedCharacterId = exactMatch.id;
+      } else {
+        // Invalid character name
+        console.warn('Invalid character name:', this.guessInput);
+        return;
+      }
+    }
+
+    // TODO: Emit guess to server with character ID
+    console.log('Guessing:', this.guessInput, 'ID:', this.selectedCharacterId);
 
     // Reset input after guess
     this.guessInput = '';
+    this.selectedCharacterId = null;
     this.showSuggestions = false;
     this.selectedSuggestionIndex = -1;
   }
