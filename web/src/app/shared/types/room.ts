@@ -5,4 +5,11 @@ export interface RoomData {
   playerId: string;
 }
 
-export interface CreateRoomResult {}
+export interface Room {
+  animeId: string;
+  code: string;
+  players: string[];
+  roundTimer: number;
+  rounds: number;
+  state: 'lobby' | 'active' | 'finished';
+}

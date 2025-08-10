@@ -1,0 +1,34 @@
+<h3 class="text-white text-xl font-bold mb-4">Join a Room</h3>
+<form
+  class="bg-gray-800 p-4 rounded-lg"
+  (ngSubmit)="onSubmit()"
+  #roomForm="ngForm"
+>
+  <div class="mb-6">
+    <label for="roomCode" class="block text-white mb-2">Room Code</label>
+    <input
+      type="text"
+      id="roomCode"
+      name="roomCode"
+      class="form-input w-full bg-gray-700 border border-gray-600 rounded-lg py-2 px-3 uppercase"
+      required
+      [(ngModel)]="roomCode"
+    />
+  </div>
+
+  @if (errorMessage) {
+    <div
+      class="mb-6 p-3 bg-red-500 border border-red-500 rounded-lg text-white text-sm"
+    >
+      {{ errorMessage }}
+    </div>
+  }
+
+  <button
+    type="submit"
+    [disabled]="roomForm.invalid"
+    class="w-full bg-primary hover:bg-primary-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-black py-3 px-4 rounded-lg font-medium disabled:text-white transition-colors"
+  >
+    Join Room
+  </button>
+</form>

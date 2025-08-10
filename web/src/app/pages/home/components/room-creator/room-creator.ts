@@ -31,6 +31,8 @@ export class RoomCreator {
   }
 
   onSubmit(): void {
+    this.errorMessage = '';
+
     if (!this.selectedAnime) {
       this.errorMessage = 'Please select an anime.';
       return;

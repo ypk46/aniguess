@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { catchError, map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
-import { RoomData, CreateRoomResult, ApiResponse } from '../types';
+import { RoomData, Room, ApiResponse } from '../types';
 
 @Injectable({
   providedIn: 'root',
@@ -16,9 +16,24 @@ export class RoomService {
   /**
    * Creates a new room.
    */
-  createRoom(roomData: RoomData): Observable<CreateRoomResult> {
+  createRoom(roomData: RoomData): Observable<Room> {
+    return this.http.post<ApiResponse<Room>>(this.apiUrl, roomData).pipe(
+      map((response) => {
+        if (response.success) {
+          return response.result;
+        } else {
+          throw new Error(response.message);
+        }
+      }),
+    );
+  }
+
+  /**
+   * Join a room.
+   */
+  joinRoom(roomCode: string, playerId: string): Observable<Room> {
     return this.http
-      .post<ApiResponse<CreateRoomResult>>(this.apiUrl, roomData)
+      .post<ApiResponse<Room>>(`${this.apiUrl}/${roomCode}/join`, { playerId })
       .pipe(
         map((response) => {
           if (response.success) {
@@ -26,6 +41,9 @@ export class RoomService {
           } else {
             throw new Error(response.message);
           }
+        }),
+        catchError((error: HttpErrorResponse) => {
+          throw new Error(error.error.message);
         }),
       );
   }
