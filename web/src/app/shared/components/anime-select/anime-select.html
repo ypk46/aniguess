@@ -1,0 +1,71 @@
+<div class="anime-select-container">
+  <div class="form-group">
+    <label class="text-white text-sm font-medium mb-2 block">
+      Choose Anime
+    </label>
+
+    <!-- Loading state -->
+    @if (loading) {
+      <div class="flex items-center text-gray-400 text-sm">
+        <div
+          class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"
+        ></div>
+        Loading anime...
+      </div>
+    }
+
+    <!-- Error state -->
+    @if (error && !loading) {
+      <div class="text-red-400 text-sm mb-2">
+        {{ error }}
+        <button
+          type="button"
+          (click)="retryLoad()"
+          class="text-blue-400 hover:text-blue-300 ml-2 underline"
+        >
+          Retry
+        </button>
+      </div>
+    }
+
+    <!-- Select dropdown -->
+    @if (!loading && !error) {
+      <select
+        [value]="selectedAnimeId || ''"
+        (change)="onAnimeChange($any($event.target).value)"
+        class="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-colors"
+      >
+        <option value="" disabled>{{ placeholder }}</option>
+        @for (animeItem of anime; track animeItem.id) {
+          <option [value]="animeItem.id" class="bg-gray-700 text-white">
+            {{ animeItem.title }}
+          </option>
+        }
+      </select>
+    }
+
+    <!-- Selected anime preview -->
+    @if (selectedAnimeId && selectedAnime) {
+      <div class="mt-2 p-2 bg-gray-800 rounded border border-gray-600">
+        <div class="flex items-center space-x-3">
+          @if (selectedAnime.imageUrl) {
+            <img
+              [src]="selectedAnime.imageUrl"
+              [alt]="selectedAnime.title"
+              class="w-12 h-12 object-cover rounded"
+              onerror="this.style.display='none'"
+            />
+          }
+          <div class="flex-1">
+            <div class="text-white font-medium">
+              {{ selectedAnime.title }}
+            </div>
+            <div class="text-gray-400 text-sm">
+              Selected for character guessing
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+</div>

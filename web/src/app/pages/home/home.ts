@@ -1,11 +1,10 @@
 import { Component } from '@angular/core';
+import { RoomCreator } from './components/room-creator/room-creator';
 
 @Component({
   selector: 'app-home',
-  imports: [],
+  imports: [RoomCreator],
   templateUrl: './home.html',
-  styleUrl: './home.css'
+  styleUrl: './home.css',
 })
-export class Home {
-
-}
+export class Home {}

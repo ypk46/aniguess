@@ -1,0 +1,52 @@
+<h3 class="text-white text-xl font-bold mb-4">Create a Room</h3>
+<form
+  class="bg-gray-800 p-4 rounded-lg"
+  (ngSubmit)="onSubmit()"
+  #roomForm="ngForm"
+>
+  <div class="mb-4">
+    <app-anime-select
+      [required]="true"
+      [selectedAnimeId]="selectedAnime?.id || null"
+      (animeSelected)="onAnimeSelected($event)"
+    ></app-anime-select>
+  </div>
+
+  <div class="mb-4">
+    <label class="text-white text-sm font-medium mb-2 block" for="roomName">
+      Rounds
+    </label>
+    <input
+      type="number"
+      id="rounds"
+      name="rounds"
+      [(ngModel)]="rounds"
+      required
+      class="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-colors"
+      [class.border-red-500]="roomForm.submitted && !rounds"
+    />
+  </div>
+
+  <div class="mb-6">
+    <label class="text-white text-sm font-medium mb-2 block" for="roomName">
+      Round Timer (in seconds)
+    </label>
+    <input
+      type="number"
+      id="roundTimer"
+      name="roundTimer"
+      [(ngModel)]="roundTimer"
+      required
+      class="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-colors"
+      [class.border-red-500]="roomForm.submitted && !roundTimer"
+    />
+  </div>
+
+  <button
+    type="submit"
+    [disabled]="roomForm.invalid || !selectedAnime"
+    class="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white py-3 px-4 rounded-lg font-medium transition-colors"
+  >
+    Create Room
+  </button>
+</form>
