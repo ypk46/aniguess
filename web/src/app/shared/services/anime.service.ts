@@ -32,4 +32,16 @@ export class AnimeService {
       .get<{ success: boolean; result?: Anime }>(`${this.apiUrl}/${id}`)
       .pipe(map((response) => response.result || null));
   }
+
+  /**
+   * Get character names for an anime (for autocomplete)
+   */
+  getCharacterNamesForAnime(animeId: string): Observable<string[]> {
+    return this.http
+      .get<{
+        success: boolean;
+        result?: string[];
+      }>(`${environment.apiUrl}/characters/anime/${animeId}/names`)
+      .pipe(map((response) => response.result || []));
+  }
 }

@@ -1,0 +1,59 @@
+/* Autocomplete container */
+.autocomplete-container {
+  position: relative;
+}
+
+/* Suggestion dropdown */
+.suggestions-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  max-height: 240px;
+  overflow-y: auto;
+  background-color: rgb(55 65 81); /* gray-700 */
+  border: 1px solid rgb(75 85 99); /* gray-600 */
+  border-radius: 0.5rem;
+  box-shadow:
+    0 10px 15px -3px rgb(0 0 0 / 0.1),
+    0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+
+.suggestion-item {
+  padding: 0.5rem 0.75rem;
+  color: white;
+  cursor: pointer;
+  border-bottom: 1px solid rgb(75 85 99); /* gray-600 */
+  transition: background-color 0.15s ease-in-out;
+}
+
+.suggestion-item:hover {
+  background-color: rgb(75 85 99); /* gray-600 */
+}
+
+.suggestion-item.bg-gray-600 {
+  background-color: rgb(75 85 99); /* gray-600 */
+}
+
+.suggestion-item:last-child {
+  border-bottom: none;
+}
+
+/* Custom scrollbar for suggestions */
+.suggestions-dropdown::-webkit-scrollbar {
+  width: 6px;
+}
+
+.suggestions-dropdown::-webkit-scrollbar-track {
+  background: rgb(55 65 81); /* gray-700 */
+}
+
+.suggestions-dropdown::-webkit-scrollbar-thumb {
+  background: rgb(107 114 128); /* gray-500 */
+  border-radius: 3px;
+}
+
+.suggestions-dropdown::-webkit-scrollbar-thumb:hover {
+  background: rgb(156 163 175); /* gray-400 */
+}
