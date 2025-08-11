@@ -146,7 +146,8 @@ export class SocketService {
           socket.emit('guess-result', {
             isCorrect: result.isCorrect,
             currentRound: result.currentRound,
-            characterName: characterName,
+            characterName: result.characterName,
+            attributeEvaluation: result.attributeEvaluation,
             timestamp: new Date().toISOString(),
           });
 

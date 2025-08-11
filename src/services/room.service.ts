@@ -1,6 +1,9 @@
 import redisClient from '../config/redis';
 import { Room, RoomState, CreateRoomRequest, Player } from '../types/room';
 import { socketRegistry } from './socket-registry';
+import { CharacterService } from './character.service';
+import { AttributeService } from './attribute.service';
+import { AttributeType, AttributeMatchType } from '../models/attribute';
 
 export class RoomService {
   private readonly ROOM_KEY_PREFIX = 'room:';
@@ -9,6 +12,13 @@ export class RoomService {
   private readonly CURRENT_ROUND_KEY_PREFIX = 'current_round:';
   private readonly ROOM_TTL = 3600 * 4; // 4 hours in seconds
   private readonly ROOM_CODE_LENGTH = 6;
+  private characterService: CharacterService;
+  private attributeService: AttributeService;
+
+  constructor() {
+    this.characterService = new CharacterService();
+    this.attributeService = new AttributeService();
+  }
 
   /**
    * Generate a unique room code.
@@ -468,6 +478,131 @@ export class RoomService {
   }
 
   /**
+   * Evaluate character attributes for detailed feedback
+   */
+  private async evaluateCharacterAttributes(
+    animeId: string,
+    guessedCharacterData: Record<string, string>,
+    correctCharacterData: Record<string, string>
+  ): Promise<
+    Record<
+      string,
+      {
+        status: 'correct' | 'partial' | 'incorrect' | 'higher' | 'lower';
+        value: any;
+      }
+    >
+  > {
+    try {
+      // Get all attributes for the anime
+      const attributes =
+        await this.attributeService.getAttributesByAnimeId(animeId);
+
+      const evaluation: Record<
+        string,
+        {
+          status: 'correct' | 'partial' | 'incorrect' | 'higher' | 'lower';
+          value: any;
+        }
+      > = {};
+
+      for (const attribute of attributes) {
+        const guessedValue = guessedCharacterData[attribute.code];
+        const correctValue = correctCharacterData[attribute.code];
+
+        // Skip if either value is missing
+        if (guessedValue === undefined || correctValue === undefined) {
+          continue;
+        }
+
+        const evaluationResult: {
+          status: 'correct' | 'partial' | 'incorrect' | 'higher' | 'lower';
+          value: any;
+        } = {
+          status: 'incorrect',
+          value: guessedValue,
+        };
+
+        switch (attribute.matchType) {
+          case AttributeMatchType.EXACT_MATCH:
+            if (guessedValue === correctValue) {
+              evaluationResult.status = 'correct';
+            } else {
+              evaluationResult.status = 'incorrect';
+            }
+            break;
+
+          case AttributeMatchType.PARTIAL_MATCH:
+            try {
+              // Parse as arrays for partial matching
+              const guessedArray = JSON.parse(guessedValue);
+              const correctArray = JSON.parse(correctValue);
+
+              if (Array.isArray(guessedArray) && Array.isArray(correctArray)) {
+                const intersection = guessedArray.filter(item =>
+                  correctArray.includes(item)
+                );
+
+                if (
+                  intersection.length === correctArray.length &&
+                  intersection.length === guessedArray.length
+                ) {
+                  evaluationResult.status = 'correct';
+                } else if (intersection.length > 0) {
+                  evaluationResult.status = 'partial';
+                } else {
+                  evaluationResult.status = 'incorrect';
+                }
+              } else {
+                // Fallback to exact match if not arrays
+                evaluationResult.status =
+                  guessedValue === correctValue ? 'correct' : 'incorrect';
+              }
+            } catch (error) {
+              // Fallback to exact match if parsing fails
+              evaluationResult.status =
+                guessedValue === correctValue ? 'correct' : 'incorrect';
+            }
+            break;
+
+          case AttributeMatchType.RANGE_MATCH:
+            if (attribute.type === AttributeType.NUMBER) {
+              const guessedNum = parseFloat(guessedValue);
+              const correctNum = parseFloat(correctValue);
+
+              if (!isNaN(guessedNum) && !isNaN(correctNum)) {
+                if (guessedNum === correctNum) {
+                  evaluationResult.status = 'correct';
+                } else if (guessedNum > correctNum) {
+                  evaluationResult.status = 'higher';
+                } else {
+                  evaluationResult.status = 'lower';
+                }
+              }
+            } else {
+              // For non-numeric range attributes, fall back to exact match
+              evaluationResult.status =
+                guessedValue === correctValue ? 'correct' : 'incorrect';
+            }
+            break;
+
+          default:
+            // Default to exact match
+            evaluationResult.status =
+              guessedValue === correctValue ? 'correct' : 'incorrect';
+        }
+
+        evaluation[attribute.code] = evaluationResult;
+      }
+
+      return evaluation;
+    } catch (error) {
+      console.error('Error evaluating character attributes:', error);
+      return {};
+    }
+  }
+
+  /**
    * Submit a guess for a player
    */
   async submitGuess(
@@ -475,7 +610,18 @@ export class RoomService {
     playerId: string,
     characterId: string,
     characterName: string
-  ): Promise<{ isCorrect: boolean; currentRound: number }> {
+  ): Promise<{
+    isCorrect: boolean;
+    currentRound: number;
+    attributeEvaluation: Record<
+      string,
+      {
+        status: 'correct' | 'partial' | 'incorrect' | 'higher' | 'lower';
+        value: any;
+      }
+    >;
+    characterName: string;
+  }> {
     try {
       const room = await this.getRoomByCode(roomCode);
       if (!room) {
@@ -502,6 +648,29 @@ export class RoomService {
       const correctCharacter = secretCharacters[currentRound - 1];
       const isCorrect = correctCharacter.id === characterId;
 
+      // Get cached character data for both characters
+      const guessedCharacterData =
+        await this.characterService.getCachedCharacter(characterId);
+      const correctCharacterData =
+        await this.characterService.getCachedCharacter(correctCharacter.id);
+
+      let attributeEvaluation: Record<
+        string,
+        {
+          status: 'correct' | 'partial' | 'incorrect' | 'higher' | 'lower';
+          value: any;
+        }
+      > = {};
+
+      // Evaluate attributes only if we have both character data
+      if (guessedCharacterData && correctCharacterData) {
+        attributeEvaluation = await this.evaluateCharacterAttributes(
+          room.animeId,
+          guessedCharacterData,
+          correctCharacterData
+        );
+      }
+
       // Get current response entry
       const responseKey = this.getPlayerResponseKey(
         roomCode,
@@ -525,12 +694,13 @@ export class RoomService {
         };
       }
 
-      // Add the guess
+      // Add the guess with detailed evaluation
       response.guesses.push({
         characterId,
         characterName,
         timestamp: new Date().toISOString(),
         isCorrect,
+        attributeEvaluation,
       });
 
       // Update correct flag if this guess is correct
@@ -549,7 +719,12 @@ export class RoomService {
         `Player ${playerId} guessed ${characterName} for round ${currentRound}: ${isCorrect ? 'CORRECT' : 'INCORRECT'}`
       );
 
-      return { isCorrect, currentRound };
+      return {
+        isCorrect,
+        currentRound,
+        attributeEvaluation,
+        characterName,
+      };
     } catch (error) {
       console.error('Error submitting guess:', error);
       throw error;
@@ -621,9 +796,7 @@ export class RoomService {
         timestamp: new Date().toISOString(),
       };
 
-      const responseExpiry = roundTimer + 30; // Add 30 seconds buffer
       await redisClient.set(responseKey, JSON.stringify(initialResponse));
-      await redisClient.expire(responseKey, responseExpiry);
 
       console.log(`Player ${playerId} advanced to round ${nextRound}`);
       return nextRound;

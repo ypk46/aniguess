@@ -2,6 +2,7 @@ import { Component, inject, OnInit, HostListener } from '@angular/core';
 import { RoomService } from '../../shared/services/room.service';
 import { AnimeService } from '../../shared/services/anime.service';
 import { PlayerService, Room, CharacterAutocomplete } from '../../shared';
+import { GuessResultMessage } from '../../shared/types/socket';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -36,7 +37,17 @@ export class RoomPage implements OnInit {
 
   // Game state tracking
   isSubmittingGuess = false;
-  lastGuessResult: { isCorrect: boolean; characterName: string } | null = null;
+  lastGuessResult: {
+    isCorrect: boolean;
+    characterName: string;
+    attributeEvaluation?: Record<
+      string,
+      {
+        status: 'correct' | 'partial' | 'incorrect' | 'higher' | 'lower';
+        value: any;
+      }
+    >;
+  } | null = null;
 
   ngOnInit() {
     const room = this.roomService.getRoom();
@@ -59,35 +70,28 @@ export class RoomPage implements OnInit {
     });
 
     // Listen for guess result
-    this.socket.on(
-      'guess-result',
-      (data: {
-        isCorrect: boolean;
-        currentRound: number;
-        characterName: string;
-        timestamp: string;
-      }) => {
-        console.log('Guess result:', data);
-        this.isSubmittingGuess = false;
-        this.lastGuessResult = {
-          isCorrect: data.isCorrect,
-          characterName: data.characterName,
-        };
+    this.socket.on('guess-result', (data: GuessResultMessage) => {
+      console.log('Guess result:', data);
+      this.isSubmittingGuess = false;
+      this.lastGuessResult = {
+        isCorrect: data.isCorrect,
+        characterName: data.characterName,
+        attributeEvaluation: data.attributeEvaluation,
+      };
 
-        if (data.isCorrect) {
-          console.log(
-            `Correct! ${data.characterName} was the right answer for round ${data.currentRound}!`,
-          );
-        } else {
-          console.log(`Incorrect guess: ${data.characterName}`);
-        }
+      if (data.isCorrect) {
+        console.log(
+          `Correct! ${data.characterName} was the right answer for round ${data.currentRound}!`,
+        );
+      } else {
+        console.log(`Incorrect guess: ${data.characterName}`);
+      }
 
-        // Clear the result after 3 seconds
-        setTimeout(() => {
-          this.lastGuessResult = null;
-        }, 3000);
-      },
-    );
+      // Clear the result after 3 seconds
+      setTimeout(() => {
+        this.lastGuessResult = null;
+      }, 3000);
+    });
 
     // Listen for round advancement
     this.socket.on(
@@ -245,6 +249,19 @@ export class RoomPage implements OnInit {
     this.selectedCharacterId = null;
     this.showSuggestions = false;
     this.selectedSuggestionIndex = -1;
+  }
+
+  // Helper method for template
+  getAttributeEvaluationEntries(
+    evaluation: Record<
+      string,
+      {
+        status: 'correct' | 'partial' | 'incorrect' | 'higher' | 'lower';
+        value: any;
+      }
+    >,
+  ): Array<{ key: string; value: { status: string; value: any } }> {
+    return Object.entries(evaluation).map(([key, value]) => ({ key, value }));
   }
 
   @HostListener('document:click', ['$event'])

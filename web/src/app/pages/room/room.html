@@ -117,17 +117,70 @@
       <!-- Guess Result Feedback -->
       @if (lastGuessResult) {
         <div
-          class="mt-3 p-3 rounded-lg text-center font-medium"
+          class="mt-3 p-3 rounded-lg font-medium"
           [class.bg-green-100]="lastGuessResult.isCorrect"
           [class.text-green-800]="lastGuessResult.isCorrect"
           [class.bg-red-100]="!lastGuessResult.isCorrect"
           [class.text-red-800]="!lastGuessResult.isCorrect"
         >
-          @if (lastGuessResult.isCorrect) {
-            ✅ Correct! {{ lastGuessResult.characterName }} was the right
-            answer!
-          } @else {
-            ❌ Incorrect: {{ lastGuessResult.characterName }}
+          <div class="text-center mb-2">
+            @if (lastGuessResult.isCorrect) {
+              ✅ Correct! {{ lastGuessResult.characterName }} was the right
+              answer!
+            } @else {
+              ❌ Incorrect: {{ lastGuessResult.characterName }}
+            }
+          </div>
+
+          <!-- Attribute Evaluation Details -->
+          @if (
+            lastGuessResult.attributeEvaluation && !lastGuessResult.isCorrect
+          ) {
+            <div class="mt-3 text-sm">
+              <div class="font-medium mb-2">Attribute Comparison:</div>
+              <div class="space-y-1">
+                @for (
+                  item of getAttributeEvaluationEntries(
+                    lastGuessResult.attributeEvaluation
+                  );
+                  track item.key
+                ) {
+                  <div
+                    class="flex justify-between items-center text-xs p-2 rounded"
+                    [class.bg-green-200]="item.value.status === 'correct'"
+                    [class.text-green-800]="item.value.status === 'correct'"
+                    [class.bg-yellow-200]="item.value.status === 'partial'"
+                    [class.text-yellow-800]="item.value.status === 'partial'"
+                    [class.bg-red-200]="item.value.status === 'incorrect'"
+                    [class.text-red-800]="item.value.status === 'incorrect'"
+                    [class.bg-blue-200]="
+                      item.value.status === 'higher' ||
+                      item.value.status === 'lower'
+                    "
+                    [class.text-blue-800]="
+                      item.value.status === 'higher' ||
+                      item.value.status === 'lower'
+                    "
+                  >
+                    <span class="font-medium capitalize">{{ item.key }}:</span>
+                    <span>
+                      {{ item.value.value }}
+                      @if (item.value.status === "correct") {
+                        ✓
+                      } @else if (item.value.status === "partial") {
+                        ~
+                      } @else if (item.value.status === "higher") {
+                        ↑
+                      } @else if (item.value.status === "lower") {
+                        ↓
+                      } @else {
+                        ✗
+                      }
+                    </span>
+                  </div>
+                }
+              </div>
+            </div>
           }
         </div>
       }
