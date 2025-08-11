@@ -1,4 +1,4 @@
 export const environment = {
-  apiUrl: 'http://localhost:3000/api',
-  socketUrl: 'http://localhost:3000',
+  apiUrl: 'https://aniguess-latest.onrender.com/api',
+  socketUrl: 'https://aniguess-latest.onrender.com',
 };
