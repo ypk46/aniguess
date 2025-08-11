@@ -625,6 +625,7 @@ export class RoomService {
       }
     >;
     characterName: string;
+    characterImage: string;
   }> {
     try {
       const room = await this.getRoomByCode(roomCode);
@@ -657,6 +658,8 @@ export class RoomService {
         await this.characterService.getCachedCharacter(characterId);
       const correctCharacterData =
         await this.characterService.getCachedCharacter(correctCharacter.id);
+
+      const characterImage = guessedCharacterData.imageUrl;
 
       let attributeEvaluation: Record<
         string,
@@ -728,6 +731,7 @@ export class RoomService {
         currentRound,
         attributeEvaluation,
         characterName,
+        characterImage,
       };
     } catch (error) {
       console.error('Error submitting guess:', error);

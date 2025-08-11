@@ -147,6 +147,7 @@ export class SocketService {
             isCorrect: result.isCorrect,
             currentRound: result.currentRound,
             characterName: result.characterName,
+            characterImage: result.characterImage,
             attributeEvaluation: result.attributeEvaluation,
             timestamp: new Date().toISOString(),
           });

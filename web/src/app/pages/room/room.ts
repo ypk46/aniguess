@@ -45,6 +45,7 @@ export class RoomPage implements OnInit {
   guessHistory: Array<{
     isCorrect: boolean;
     characterName: string;
+    characterImage?: string;
     attributeEvaluation?: Record<
       string,
       {
@@ -87,6 +88,7 @@ export class RoomPage implements OnInit {
       this.guessHistory.unshift({
         isCorrect: data.isCorrect,
         characterName: data.characterName,
+        characterImage: data.characterImage,
         attributeEvaluation: data.attributeEvaluation,
         timestamp: data.timestamp,
       });
@@ -295,6 +297,14 @@ export class RoomPage implements OnInit {
       (attr) => attr.code === attributeCode,
     );
     return attribute ? attribute.name : attributeCode;
+  }
+
+  // Handle image loading errors
+  onImageError(event: Event) {
+    const target = event.target as HTMLImageElement;
+    if (target) {
+      target.style.display = 'none';
+    }
   }
 
   @HostListener('document:click', ['$event'])

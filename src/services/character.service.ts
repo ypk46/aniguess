@@ -120,6 +120,7 @@ export class CharacterService {
         const hashFields: Record<string, string> = {
           id: character.id,
           name: character.name,
+          imageUrl: character.imageUrl || '',
           animeId: character.animeId,
         };
 

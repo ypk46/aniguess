@@ -8,6 +8,7 @@ export interface GuessResultMessage {
   isCorrect: boolean;
   currentRound: number;
   characterName: string;
+  characterImage: string;
   attributeEvaluation: Record<
     string,
     {

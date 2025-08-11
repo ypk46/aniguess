@@ -134,98 +134,131 @@
                 [class.bg-gray-50]="!guess.isCorrect"
                 [class.border-gray-200]="!guess.isCorrect"
               >
-                <!-- Character Name and Overall Result -->
-                <div class="flex items-center justify-between mb-3">
-                  <div class="flex items-center space-x-2">
-                    <span
-                      class="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded-full font-mono"
-                    >
-                      #{{ guessHistory.length - i }}
-                    </span>
-                    <span
-                      class="font-medium text-sm"
-                      [class.text-green-800]="guess.isCorrect"
-                      [class.text-gray-800]="!guess.isCorrect"
-                    >
-                      {{ guess.characterName }}
-                    </span>
-                    @if (guess.isCorrect) {
-                      <span class="text-green-600 text-lg">🎉</span>
+                <div class="flex space-x-3">
+                  <!-- Character Image -->
+                  <div class="flex-shrink-0">
+                    @if (guess.characterImage) {
+                      <img
+                        [src]="guess.characterImage"
+                        [alt]="guess.characterName"
+                        class="w-16 h-16 rounded-lg object-cover border border-gray-300"
+                        (error)="onImageError($event)"
+                      />
                     } @else {
-                      <span class="text-red-600">❌</span>
-                    }
-                  </div>
-                  <span class="text-xs text-gray-500">
-                    {{ guess.timestamp | date: "HH:mm:ss" }}
-                  </span>
-                </div>
-
-                <!-- Attribute Comparison Grid -->
-                @if (guess.attributeEvaluation && !guess.isCorrect) {
-                  <div
-                    class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2"
-                  >
-                    @for (
-                      item of getAttributeEvaluationEntries(
-                        guess.attributeEvaluation
-                      );
-                      track item.key
-                    ) {
                       <div
-                        class="flex items-center justify-between p-2 rounded text-xs font-medium border"
-                        [class.bg-green-100]="item.value.status === 'correct'"
-                        [class.text-green-800]="item.value.status === 'correct'"
-                        [class.border-green-200]="
-                          item.value.status === 'correct'
-                        "
-                        [class.bg-yellow-100]="item.value.status === 'partial'"
-                        [class.text-yellow-800]="
-                          item.value.status === 'partial'
-                        "
-                        [class.border-yellow-200]="
-                          item.value.status === 'partial'
-                        "
-                        [class.bg-red-100]="item.value.status === 'incorrect'"
-                        [class.text-red-800]="item.value.status === 'incorrect'"
-                        [class.border-red-200]="
-                          item.value.status === 'incorrect'
-                        "
-                        [class.bg-blue-100]="
-                          item.value.status === 'higher' ||
-                          item.value.status === 'lower'
-                        "
-                        [class.text-blue-800]="
-                          item.value.status === 'higher' ||
-                          item.value.status === 'lower'
-                        "
-                        [class.border-blue-200]="
-                          item.value.status === 'higher' ||
-                          item.value.status === 'lower'
-                        "
+                        class="w-16 h-16 rounded-lg bg-gray-300 flex items-center justify-center border border-gray-300"
                       >
-                        <span class="truncate font-semibold">{{
-                          getAttributeDisplayName(item.key)
-                        }}</span>
-                        <div class="flex items-center space-x-1 ml-2">
-                          <span class="max-w-20">{{
-                            item.value.value.replaceAll(",", " ")
-                          }}</span>
-                          @if (item.value.status === "correct") {
-                            <span class="text-green-600">✓</span>
-                          } @else if (item.value.status === "partial") {
-                            <span class="text-yellow-600">~</span>
-                          } @else if (item.value.status === "higher") {
-                            <span class="text-blue-600 font-bold">↓</span>
-                          } @else if (item.value.status === "lower") {
-                            <span class="text-blue-600 font-bold">↑</span>
-                          } @else {
-                            <span class="text-red-600">✗</span>
-                          }
-                        </div>
+                        <span class="text-gray-500 text-xs">No Image</span>
                       </div>
                     }
                   </div>
-                }
+
+                  <!-- Content Area -->
+                  <div class="flex-1 min-w-0">
+                    <!-- Character Name and Overall Result -->
+                    <div class="flex items-center justify-between mb-3">
+                      <div class="flex items-center space-x-2">
+                        <span
+                          class="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded-full font-mono"
+                        >
+                          #{{ guessHistory.length - i }}
+                        </span>
+                        <span
+                          class="font-medium text-sm"
+                          [class.text-green-800]="guess.isCorrect"
+                          [class.text-gray-800]="!guess.isCorrect"
+                        >
+                          {{ guess.characterName }}
+                        </span>
+                        @if (guess.isCorrect) {
+                          <span class="text-green-600 text-lg">🎉</span>
+                        } @else {
+                          <span class="text-red-600">❌</span>
+                        }
+                      </div>
+                      <span class="text-xs text-gray-500">
+                        {{ guess.timestamp | date: "HH:mm:ss" }}
+                      </span>
+                    </div>
+
+                    <!-- Attribute Comparison Grid -->
+                    @if (guess.attributeEvaluation && !guess.isCorrect) {
+                      <div
+                        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2"
+                      >
+                        @for (
+                          item of getAttributeEvaluationEntries(
+                            guess.attributeEvaluation
+                          );
+                          track item.key
+                        ) {
+                          <div
+                            class="flex items-center justify-between p-2 rounded text-xs font-medium border"
+                            [class.bg-green-100]="
+                              item.value.status === 'correct'
+                            "
+                            [class.text-green-800]="
+                              item.value.status === 'correct'
+                            "
+                            [class.border-green-200]="
+                              item.value.status === 'correct'
+                            "
+                            [class.bg-yellow-100]="
+                              item.value.status === 'partial'
+                            "
+                            [class.text-yellow-800]="
+                              item.value.status === 'partial'
+                            "
+                            [class.border-yellow-200]="
+                              item.value.status === 'partial'
+                            "
+                            [class.bg-red-100]="
+                              item.value.status === 'incorrect'
+                            "
+                            [class.text-red-800]="
+                              item.value.status === 'incorrect'
+                            "
+                            [class.border-red-200]="
+                              item.value.status === 'incorrect'
+                            "
+                            [class.bg-blue-100]="
+                              item.value.status === 'higher' ||
+                              item.value.status === 'lower'
+                            "
+                            [class.text-blue-800]="
+                              item.value.status === 'higher' ||
+                              item.value.status === 'lower'
+                            "
+                            [class.border-blue-200]="
+                              item.value.status === 'higher' ||
+                              item.value.status === 'lower'
+                            "
+                          >
+                            <span class="truncate font-semibold">{{
+                              getAttributeDisplayName(item.key)
+                            }}</span>
+                            <div class="flex items-center space-x-1 ml-2">
+                              <span class="max-w-20">{{
+                                item.value.value.replaceAll(",", " ")
+                              }}</span>
+                              @if (item.value.status === "correct") {
+                                <span class="text-green-600">✓</span>
+                              } @else if (item.value.status === "partial") {
+                                <span class="text-yellow-600">~</span>
+                              } @else if (item.value.status === "higher") {
+                                <span class="text-blue-600 font-bold">↓</span>
+                              } @else if (item.value.status === "lower") {
+                                <span class="text-blue-600 font-bold">↑</span>
+                              } @else {
+                                <span class="text-red-600">✗</span>
+                              }
+                            </div>
+                          </div>
+                        }
+                      </div>
+                    }
+                  </div>
+                </div>
               </div>
             }
           </div>
