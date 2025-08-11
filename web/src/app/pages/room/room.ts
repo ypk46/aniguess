@@ -41,6 +41,7 @@ export class RoomPage implements OnInit {
   selectedSuggestionIndex = -1;
 
   // Game state tracking
+  isCorrect = false;
   isSubmittingGuess = false;
   guessHistory: Array<{
     isCorrect: boolean;
@@ -81,7 +82,6 @@ export class RoomPage implements OnInit {
 
     // Listen for guess result
     this.socket.on('guess-result', (data: GuessResultMessage) => {
-      console.log('Guess result:', data);
       this.isSubmittingGuess = false;
 
       // Add guess to history
@@ -94,11 +94,9 @@ export class RoomPage implements OnInit {
       });
 
       if (data.isCorrect) {
-        console.log(
-          `Correct! ${data.characterName} was the right answer for round ${data.currentRound}!`,
-        );
+        this.isCorrect = true;
       } else {
-        console.log(`Incorrect guess: ${data.characterName}`);
+        this.isCorrect = false;
       }
     });
 
@@ -106,10 +104,12 @@ export class RoomPage implements OnInit {
     this.socket.on(
       'round-advanced',
       (data: { newRound: number; timestamp: string }) => {
-        console.log('Advanced to round:', data.newRound);
-        this.currentRound = data.newRound;
-        // Clear guess history for new round
-        this.guessHistory = [];
+        // Clear guess history for new round after 10 seconds
+        setTimeout(() => {
+          this.currentRound = data.newRound;
+          this.guessHistory = [];
+          this.isCorrect = false;
+        }, 5000);
       },
     );
 
