@@ -1,4 +1,10 @@
-import { Component, inject, OnInit, HostListener } from '@angular/core';
+import {
+  Component,
+  inject,
+  OnInit,
+  OnDestroy,
+  HostListener,
+} from '@angular/core';
 import { RoomService } from '../../shared/services/room.service';
 import { AnimeService } from '../../shared/services/anime.service';
 import {
@@ -20,7 +26,7 @@ import { PlayerCard } from '../../shared/components/player-card/player-card';
   templateUrl: './room.html',
   styleUrl: './room.css',
 })
-export class RoomPage implements OnInit {
+export class RoomPage implements OnInit, OnDestroy {
   private roomService = inject(RoomService);
   private animeService = inject(AnimeService);
   private playerService = inject(PlayerService);
@@ -58,6 +64,11 @@ export class RoomPage implements OnInit {
   }> = [];
   animeAttributes: Attribute[] = [];
 
+  // Timer functionality
+  currentTimer: number = 0;
+  timerInterval: any;
+  isTimerActive = false;
+
   ngOnInit() {
     const room = this.roomService.getRoom();
     if (!room) {
@@ -77,6 +88,13 @@ export class RoomPage implements OnInit {
         this.loadCharacterNames();
         // Clear guess history when game starts
         this.guessHistory = [];
+        // Start timer when game is in progress
+        this.startTimer();
+      }
+
+      // Stop timer if game is not in progress
+      if (room.state !== 'in_progress') {
+        this.stopTimer();
       }
     });
 
@@ -95,6 +113,8 @@ export class RoomPage implements OnInit {
 
       if (data.isCorrect) {
         this.isCorrect = true;
+        // Stop timer when correct guess is made
+        this.stopTimer();
       } else {
         this.isCorrect = false;
       }
@@ -104,11 +124,13 @@ export class RoomPage implements OnInit {
     this.socket.on(
       'round-advanced',
       (data: { newRound: number; timestamp: string }) => {
-        // Clear guess history for new round after 10 seconds
+        // Clear guess history for new round
         setTimeout(() => {
           this.currentRound = data.newRound;
           this.guessHistory = [];
           this.isCorrect = false;
+          // Restart timer for new round
+          this.startTimer();
         }, 5000);
       },
     );
@@ -305,6 +327,53 @@ export class RoomPage implements OnInit {
     if (target) {
       target.style.display = 'none';
     }
+  }
+
+  // Timer methods
+  startTimer() {
+    if (this.room?.roundTimer) {
+      this.currentTimer = this.room.roundTimer;
+      this.isTimerActive = true;
+
+      this.timerInterval = setInterval(() => {
+        this.currentTimer--;
+
+        if (this.currentTimer <= 0) {
+          this.stopTimer();
+          this.onTimerExpired();
+        }
+      }, 1000);
+    }
+  }
+
+  stopTimer() {
+    if (this.timerInterval) {
+      clearInterval(this.timerInterval);
+      this.timerInterval = null;
+    }
+    this.isTimerActive = false;
+  }
+
+  onTimerExpired() {
+    console.log('Timer expired! Skipping round...');
+    // Mock method call to skip round
+    this.skipRound();
+  }
+
+  skipRound() {
+    // Mock implementation - this would normally emit to server
+    console.log('Skip round called - would emit to server');
+
+    // For demo purposes, just log and potentially show a message
+    alert('Time is up! Round will be skipped.');
+
+    // In a real implementation, you would emit to the server:
+    // this.socket.emit('skip-round', { roomCode: this.room.code });
+  }
+
+  ngOnDestroy() {
+    // Clean up timer when component is destroyed
+    this.stopTimer();
   }
 
   @HostListener('document:click', ['$event'])

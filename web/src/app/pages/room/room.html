@@ -32,14 +32,51 @@
   @if (room.state == "in_progress") {
     <div class="bg-gray-800 p-4 rounded-lg mb-4">
       <h2 class="text-white text-lg font-medium mb-2">Game in Progress</h2>
-      <div class="flex justify-between items-center">
+      <div class="flex justify-between items-center mb-3">
         <p class="text-gray-400">
           Current round: {{ currentRound }}/{{ room.rounds }}
         </p>
-        <div class="text-sm text-gray-400">
-          Round Timer: {{ room.roundTimer }}s
+        <div class="text-sm text-gray-400 flex items-center space-x-2">
+          <span>Round Timer:</span>
+          <div
+            class="px-2 py-1 rounded font-mono font-medium"
+            [class.text-red-400]="currentTimer <= 10 && isTimerActive"
+            [class.text-yellow-400]="
+              currentTimer > 10 && currentTimer <= 30 && isTimerActive
+            "
+            [class.text-green-400]="currentTimer > 30 && isTimerActive"
+            [class.text-gray-400]="!isTimerActive"
+            [class.bg-red-900]="currentTimer <= 10 && isTimerActive"
+            [class.bg-yellow-900]="
+              currentTimer > 10 && currentTimer <= 30 && isTimerActive
+            "
+            [class.bg-green-900]="currentTimer > 30 && isTimerActive"
+            [class.animate-pulse]="currentTimer <= 10 && isTimerActive"
+          >
+            @if (isTimerActive) {
+              {{ currentTimer }}s
+            } @else {
+              {{ room.roundTimer }}s
+            }
+          </div>
         </div>
       </div>
+
+      <!-- Timer Progress Bar -->
+      @if (isTimerActive && room.roundTimer) {
+        <div class="w-full bg-gray-700 rounded-full h-2">
+          <div
+            class="h-2 rounded-full transition-all duration-1000 ease-linear"
+            [class.bg-green-500]="currentTimer > room.roundTimer * 0.6"
+            [class.bg-yellow-500]="
+              currentTimer <= room.roundTimer * 0.6 &&
+              currentTimer > room.roundTimer * 0.3
+            "
+            [class.bg-red-500]="currentTimer <= room.roundTimer * 0.3"
+            [style.width.%]="(currentTimer / room.roundTimer) * 100"
+          ></div>
+        </div>
+      }
     </div>
 
     <!-- Character Guess Input -->

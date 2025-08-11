@@ -781,7 +781,7 @@ export class RoomService {
 
       if (nextRound > room.rounds) {
         console.log(`Player ${playerId} has completed all rounds`);
-        return currentRound;
+        return 0;
       }
 
       // Update current round

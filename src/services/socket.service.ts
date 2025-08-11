@@ -168,6 +168,11 @@ export class SocketService {
               (await roomService.getRoomByCode(roomCode))?.roundTimer || 60
             );
 
+            if (nextRound === 0) {
+              // Finish game session
+              return;
+            }
+
             socket.emit('round-advanced', {
               newRound: nextRound,
               timestamp: new Date().toISOString(),
