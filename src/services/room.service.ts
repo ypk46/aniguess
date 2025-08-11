@@ -718,10 +718,6 @@ export class RoomService {
       // Store updated response
       await redisClient.set(responseKey, JSON.stringify(response));
 
-      // Set expiry based on round timer
-      const responseExpiry = room.roundTimer + 30; // Add 30 seconds buffer
-      await redisClient.expire(responseKey, responseExpiry);
-
       console.log(
         `Player ${playerId} guessed ${characterName} for round ${currentRound}: ${isCorrect ? 'CORRECT' : 'INCORRECT'}`
       );
