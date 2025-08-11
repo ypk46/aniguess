@@ -4,6 +4,9 @@ import { WelcomeMessage, PongMessage } from '../types/responses/socket';
 import { RoomService } from './room.service';
 import { CharacterService } from './character.service';
 import { RoomState } from '../types/room';
+import { createClient, RedisClientType } from 'redis';
+import { redisConfig } from '../config';
+import { createAdapter } from '@socket.io/redis-adapter';
 
 /**
  * Socket Service
@@ -12,13 +15,14 @@ import { RoomState } from '../types/room';
 export class SocketService {
   private io: SocketIOServer;
 
-  constructor(server: HttpServer) {
+  constructor(server: HttpServer, pubClient: any, subClient: any) {
     // Initialize Socket.IO with CORS configuration
     this.io = new SocketIOServer(server, {
       cors: {
         origin: '*',
         methods: ['GET', 'POST'],
       },
+      adapter: createAdapter(pubClient, subClient),
     });
 
     this.initializeSocketHandlers();
@@ -293,6 +297,13 @@ export class SocketService {
 }
 
 // Export factory function to create socket service
-export function createSocketService(server: HttpServer): SocketService {
-  return new SocketService(server);
+export async function createSocketService(
+  server: HttpServer
+): Promise<SocketService> {
+  const pubClient = createClient({ url: redisConfig.url });
+  const subClient = pubClient.duplicate();
+
+  await Promise.all([pubClient.connect(), subClient.connect()]);
+
+  return new SocketService(server, pubClient, subClient);
 }
