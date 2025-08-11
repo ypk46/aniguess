@@ -1,5 +1,12 @@
 import redisClient from '../config/redis';
-import { Room, RoomState, CreateRoomRequest, Player } from '../types/room';
+import {
+  Room,
+  RoomState,
+  CreateRoomRequest,
+  Player,
+  PlayerScore,
+  GameEndData,
+} from '../types/room';
 import { socketRegistry } from './socket-registry';
 import { CharacterService } from './character.service';
 import { AttributeService } from './attribute.service';
@@ -439,7 +446,6 @@ export class RoomService {
         // Initialize current round to 1 for each player
         const currentRoundKey = this.getCurrentRoundKey(roomCode, player.id);
         pipeline.set(currentRoundKey, '1');
-        pipeline.expire(currentRoundKey, this.ROOM_TTL);
 
         // Initialize response entry for round 1
         const responseKey = this.getPlayerResponseKey(roomCode, player.id, 1);
@@ -777,13 +783,16 @@ export class RoomService {
 
       if (nextRound > room.rounds) {
         console.log(`Player ${playerId} has completed all rounds`);
+
+        // End the game when the first player completes all rounds
+        await this.endGame(roomCode);
+
         return 0;
       }
 
       // Update current round
       const currentRoundKey = this.getCurrentRoundKey(roomCode, playerId);
       await redisClient.set(currentRoundKey, nextRound.toString());
-      await redisClient.expire(currentRoundKey, this.ROOM_TTL);
 
       // Initialize response entry for next round
       const responseKey = this.getPlayerResponseKey(
@@ -806,6 +815,114 @@ export class RoomService {
       return nextRound;
     } catch (error) {
       console.error('Error advancing player to next round:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Calculate scores for all players
+   */
+  async calculateScores(roomCode: string): Promise<PlayerScore[]> {
+    try {
+      const room = await this.getRoomByCode(roomCode);
+      if (!room) {
+        throw new Error('Room not found');
+      }
+
+      const scores: PlayerScore[] = [];
+
+      for (const player of room.players) {
+        let correctAnswers = 0;
+
+        // Check each round for correct answers
+        for (let round = 1; round <= room.rounds; round++) {
+          const response = await this.getPlayerResponse(
+            roomCode,
+            player.id,
+            round
+          );
+          if (response && response.isCorrect) {
+            correctAnswers++;
+          }
+        }
+
+        scores.push({
+          playerId: player.id,
+          playerName: player.name,
+          correctAnswers,
+          totalRounds: room.rounds,
+        });
+      }
+
+      // Sort by correct answers (descending)
+      scores.sort((a, b) => b.correctAnswers - a.correctAnswers);
+
+      return scores;
+    } catch (error) {
+      console.error('Error calculating scores:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * End the game and emit results
+   */
+  async endGame(roomCode: string): Promise<void> {
+    try {
+      const room = await this.getRoomByCode(roomCode);
+      if (!room) {
+        throw new Error('Room not found');
+      }
+
+      // Calculate final scores
+      const scores = await this.calculateScores(roomCode);
+
+      // Determine winner (player with most correct answers)
+      if (scores.length === 0) {
+        throw new Error('No scores found');
+      }
+
+      const winner = scores[0]!; // Already sorted by correct answers descending
+
+      // Get secret characters with their details
+      const secretCharacters = await this.getSecretCharacters(roomCode);
+      if (!secretCharacters) {
+        throw new Error('Secret characters not found');
+      }
+
+      const characterService = new CharacterService();
+      const secretCharactersWithDetails = await Promise.all(
+        secretCharacters.map(async (char: any, index: number) => {
+          const characterData = await characterService.getCachedCharacter(
+            char.id
+          );
+          return {
+            name: characterData.name || char.name,
+            imageUrl: characterData.imageUrl || '',
+            round: index + 1,
+          };
+        })
+      );
+
+      const gameEndData: GameEndData = {
+        scores,
+        winner,
+        secretCharacters: secretCharactersWithDetails,
+        timestamp: new Date().toISOString(),
+      };
+
+      // Update room state to finished
+      await this.updateRoomState(roomCode, RoomState.FINISHED);
+
+      // Emit game-ended event to all players in the room
+      const socketService = socketRegistry.getSocketService();
+      socketService.broadcastToRoom(roomCode, 'game-ended', gameEndData);
+
+      console.log(
+        `Game ended for room ${roomCode}. Winner: ${winner.playerName} with ${winner.correctAnswers}/${winner.totalRounds} correct answers`
+      );
+    } catch (error) {
+      console.error('Error ending game:', error);
       throw error;
     }
   }

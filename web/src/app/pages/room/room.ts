@@ -13,7 +13,11 @@ import {
   CharacterAutocomplete,
   Attribute,
 } from '../../shared';
-import { GuessResultMessage } from '../../shared/types/socket';
+import {
+  GuessResultMessage,
+  GameEndMessage,
+  PlayerScore,
+} from '../../shared/types/socket';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -68,6 +72,9 @@ export class RoomPage implements OnInit, OnDestroy {
   currentTimer: number = 0;
   timerInterval: any;
   isTimerActive = false;
+
+  // Game end data
+  gameEndData: GameEndMessage | null = null;
 
   ngOnInit() {
     const room = this.roomService.getRoom();
@@ -154,6 +161,14 @@ export class RoomPage implements OnInit, OnDestroy {
     this.socket.on('guess-error', (data: { message: string }) => {
       console.error('Guess error:', data.message);
       alert(`Error: ${data.message}`);
+    });
+
+    // Listen for game ended
+    this.socket.on('game-ended', (data: GameEndMessage) => {
+      console.log('Game ended:', data);
+      this.gameEndData = data;
+      // Stop timer when game ends
+      this.stopTimer();
     });
   }
 
@@ -389,5 +404,9 @@ export class RoomPage implements OnInit, OnDestroy {
   onGameStart() {
     if (!this.room) return;
     this.socket.emit('game-start', { roomCode: this.room.code });
+  }
+
+  goBackToHome() {
+    this.router.navigate(['/']);
   }
 }

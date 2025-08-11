@@ -21,6 +21,24 @@ export interface Player {
   name: string;
 }
 
+export interface PlayerScore {
+  playerId: string;
+  playerName: string;
+  correctAnswers: number;
+  totalRounds: number;
+}
+
+export interface GameEndData {
+  scores: PlayerScore[];
+  winner: PlayerScore;
+  secretCharacters: Array<{
+    name: string;
+    imageUrl: string;
+    round: number;
+  }>;
+  timestamp: string;
+}
+
 export interface CreateRoomRequest {
   animeId: string;
   rounds: number;

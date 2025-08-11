@@ -169,10 +169,14 @@ export class SocketService {
             );
 
             if (nextRound === 0) {
-              // Finish game session
+              // Player completed all rounds - game ending is handled in advancePlayerToNextRound
+              console.log(
+                `Player ${playerId} completed all rounds for room ${roomCode}`
+              );
               return;
             }
 
+            // Only emit round-advanced if game hasn't ended
             socket.emit('round-advanced', {
               newRound: nextRound,
               timestamp: new Date().toISOString(),

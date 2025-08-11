@@ -18,3 +18,21 @@ export interface GuessResultMessage {
   >;
   timestamp: string;
 }
+
+export interface PlayerScore {
+  playerId: string;
+  playerName: string;
+  correctAnswers: number;
+  totalRounds: number;
+}
+
+export interface GameEndMessage {
+  scores: PlayerScore[];
+  winner: PlayerScore;
+  secretCharacters: Array<{
+    name: string;
+    imageUrl: string;
+    round: number;
+  }>;
+  timestamp: string;
+}
