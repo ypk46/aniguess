@@ -1,1 +1,361 @@
-<p>how-to-play works!</p>
+<div class="container mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl py-8">
+  <!-- Header -->
+  <div class="text-center mb-8">
+    <h1 class="text-4xl font-bold text-white mb-4">How to Play AniGuess</h1>
+    <p class="text-gray-400 text-lg">
+      Test your anime knowledge by guessing secret characters with your friends!
+    </p>
+  </div>
+
+  <!-- Game Overview -->
+  <div class="bg-gray-800 rounded-lg p-6 mb-8">
+    <h2 class="text-2xl font-bold text-white mb-4 flex items-center">
+      <span class="mr-3">🎯</span>
+      Game Overview
+    </h2>
+    <p class="text-gray-300 text-lg leading-relaxed">
+      AniGuess is a multiplayer guessing game where players compete to identify
+      secret anime characters. Use character attributes as hints to make
+      educated guesses and be the first to complete all rounds!
+    </p>
+  </div>
+
+  <!-- Step-by-step Instructions -->
+  <div class="space-y-8">
+    <!-- Step 1: Create Room -->
+    <div class="bg-gray-800 rounded-lg p-6 step-content">
+      <h3 class="text-xl font-bold text-white mb-4 flex items-center">
+        <span
+          class="step-number text-black rounded-full w-8 h-8 flex items-center justify-center mr-3 font-bold"
+          >1</span
+        >
+        Create a Room
+      </h3>
+      <div class="space-y-4">
+        <p class="text-gray-300">
+          To start a new game, you need to create a room:
+        </p>
+        <ul class="text-gray-300 space-y-2 ml-4">
+          <li class="flex items-start">
+            <span class="text-primary mr-2">•</span>
+            <span
+              ><strong>Choose an Anime:</strong> Select from our collection of
+              popular anime series</span
+            >
+          </li>
+          <li class="flex items-start">
+            <span class="text-primary mr-2">•</span>
+            <span
+              ><strong>Set Number of Rounds:</strong> Decide how many characters
+              to guess (1-10 rounds)</span
+            >
+          </li>
+          <li class="flex items-start">
+            <span class="text-primary mr-2">•</span>
+            <span
+              ><strong>Set Timer:</strong> Choose how long each round lasts
+              (30-300 seconds)</span
+            >
+          </li>
+        </ul>
+        <div class="bg-blue-900 border border-blue-600 rounded-lg p-4 mt-4">
+          <p class="text-blue-200 text-sm">
+            <strong>💡 Tip:</strong> A room code will be generated after
+            creation. Share this code with your friends!
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2: Invite Friends -->
+    <div class="bg-gray-800 rounded-lg p-6 step-content">
+      <h3 class="text-xl font-bold text-white mb-4 flex items-center">
+        <span
+          class="step-number text-black rounded-full w-8 h-8 flex items-center justify-center mr-3 font-bold"
+          >2</span
+        >
+        Invite Friends
+      </h3>
+      <div class="space-y-4">
+        <p class="text-gray-300">
+          Share your room code with friends so they can join:
+        </p>
+        <ul class="text-gray-300 space-y-2 ml-4">
+          <li class="flex items-start">
+            <span class="text-primary mr-2">•</span>
+            <span
+              >Your friends can use the <strong>"Join Room"</strong> option on
+              the home page</span
+            >
+          </li>
+          <li class="flex items-start">
+            <span class="text-primary mr-2">•</span>
+            <span
+              >Enter the <strong>6-character room code</strong> you
+              provide</span
+            >
+          </li>
+          <li class="flex items-start">
+            <span class="text-primary mr-2">•</span>
+            <span>Up to <strong>4 players</strong> can join a single room</span>
+          </li>
+        </ul>
+        <div class="bg-green-900 border border-green-600 rounded-lg p-4 mt-4">
+          <p class="text-green-200 text-sm">
+            <strong>✅ Note:</strong> Players can only join while the room is in
+            "lobby" state, before the game starts.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3: Start the Game -->
+    <div class="bg-gray-800 rounded-lg p-6 step-content">
+      <h3 class="text-xl font-bold text-white mb-4 flex items-center">
+        <span
+          class="step-number text-black rounded-full w-8 h-8 flex items-center justify-center mr-3 font-bold"
+          >3</span
+        >
+        Start the Game
+      </h3>
+      <div class="space-y-4">
+        <p class="text-gray-300">
+          Once all players have joined, the room creator can start the game:
+        </p>
+        <ul class="text-gray-300 space-y-2 ml-4">
+          <li class="flex items-start">
+            <span class="text-primary mr-2">•</span>
+            <span
+              >Only the <strong>room creator</strong> can start the game</span
+            >
+          </li>
+          <li class="flex items-start">
+            <span class="text-primary mr-2">•</span>
+            <span
+              >At least <strong>2 players</strong> must be in the room to
+              start</span
+            >
+          </li>
+          <li class="flex items-start">
+            <span class="text-primary mr-2">•</span>
+            <span>Secret characters are randomly selected for each round</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Step 4: Gameplay -->
+    <div class="bg-gray-800 rounded-lg p-6 step-content">
+      <h3 class="text-xl font-bold text-white mb-4 flex items-center">
+        <span
+          class="step-number text-black rounded-full w-8 h-8 flex items-center justify-center mr-3 font-bold"
+          >4</span
+        >
+        Gameplay
+      </h3>
+      <div class="space-y-4">
+        <p class="text-gray-300">
+          Each round, players must guess the secret character:
+        </p>
+
+        <!-- Timer -->
+        <div class="bg-gray-700 rounded-lg p-4">
+          <h4 class="text-white font-semibold mb-2 flex items-center">
+            <span class="mr-2">⏱️</span>
+            Round Timer
+          </h4>
+          <ul class="text-gray-300 space-y-1 ml-4 text-sm">
+            <li>• A countdown timer shows remaining time for the round</li>
+            <li>
+              • Timer changes color as time runs out (green → yellow → red)
+            </li>
+            <li>• If time expires, the round is skipped automatically</li>
+          </ul>
+        </div>
+
+        <!-- Guessing -->
+        <div class="bg-gray-700 rounded-lg p-4">
+          <h4 class="text-white font-semibold mb-2 flex items-center">
+            <span class="mr-2">🤔</span>
+            Making Guesses
+          </h4>
+          <ul class="text-gray-300 space-y-1 ml-4 text-sm">
+            <li>• Type character names in the guess input field</li>
+            <li>• Autocomplete suggestions help you find valid characters</li>
+            <li>• Submit your guess to receive detailed feedback</li>
+          </ul>
+        </div>
+
+        <!-- Attribute Hints -->
+        <div class="bg-gray-700 rounded-lg p-4">
+          <h4 class="text-white font-semibold mb-2 flex items-center">
+            <span class="mr-2">🎯</span>
+            Attribute Hints
+          </h4>
+          <p class="text-gray-300 text-sm mb-3">
+            After each guess, you'll receive hints about how your guessed
+            character compares to the secret character:
+          </p>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div
+              class="bg-green-100 border border-green-200 rounded p-3 hint-card"
+            >
+              <div class="flex items-center mb-1">
+                <span class="text-green-600 mr-2">✓</span>
+                <span class="font-semibold text-green-800">Correct</span>
+              </div>
+              <p class="text-green-700 text-xs">
+                This attribute matches exactly
+              </p>
+            </div>
+            <div
+              class="bg-yellow-100 border border-yellow-200 rounded p-3 hint-card"
+            >
+              <div class="flex items-center mb-1">
+                <span class="text-yellow-600 mr-2">~</span>
+                <span class="font-semibold text-yellow-800">Partial</span>
+              </div>
+              <p class="text-yellow-700 text-xs">
+                Some values match (for lists)
+              </p>
+            </div>
+            <div
+              class="bg-blue-100 border border-blue-200 rounded p-3 hint-card"
+            >
+              <div class="flex items-center mb-1">
+                <span class="text-blue-600 mr-2 font-bold">↑</span>
+                <span class="font-semibold text-blue-800">Higher</span>
+              </div>
+              <p class="text-blue-700 text-xs">Secret value is higher</p>
+            </div>
+            <div
+              class="bg-blue-100 border border-blue-200 rounded p-3 hint-card"
+            >
+              <div class="flex items-center mb-1">
+                <span class="text-blue-600 mr-2 font-bold">↓</span>
+                <span class="font-semibold text-blue-800">Lower</span>
+              </div>
+              <p class="text-blue-700 text-xs">Secret value is lower</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 5: Advancing Rounds -->
+    <div class="bg-gray-800 rounded-lg p-6 step-content">
+      <h3 class="text-xl font-bold text-white mb-4 flex items-center">
+        <span
+          class="step-number text-black rounded-full w-8 h-8 flex items-center justify-center mr-3 font-bold"
+          >5</span
+        >
+        Advancing Rounds
+      </h3>
+      <div class="space-y-4">
+        <p class="text-gray-300">
+          Progress through rounds by making correct guesses:
+        </p>
+        <ul class="text-gray-300 space-y-2 ml-4">
+          <li class="flex items-start">
+            <span class="text-primary mr-2">•</span>
+            <span
+              >When you guess correctly, you automatically advance to the next
+              round</span
+            >
+          </li>
+          <li class="flex items-start">
+            <span class="text-primary mr-2">•</span>
+            <span>Each player progresses independently at their own pace</span>
+          </li>
+          <li class="flex items-start">
+            <span class="text-primary mr-2">•</span>
+            <span
+              >Your guess history shows all previous attempts with
+              feedback</span
+            >
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Step 6: Game End -->
+    <div class="bg-gray-800 rounded-lg p-6 step-content">
+      <h3 class="text-xl font-bold text-white mb-4 flex items-center">
+        <span
+          class="step-number text-black rounded-full w-8 h-8 flex items-center justify-center mr-3 font-bold"
+          >6</span
+        >
+        Game End & Scoring
+      </h3>
+      <div class="space-y-4">
+        <p class="text-gray-300">
+          The game ends when the first player completes all rounds:
+        </p>
+        <ul class="text-gray-300 space-y-2 ml-4">
+          <li class="flex items-start">
+            <span class="text-primary mr-2">•</span>
+            <span
+              >Final scores show each player's correct answers out of total
+              rounds</span
+            >
+          </li>
+          <li class="flex items-start">
+            <span class="text-primary mr-2">•</span>
+            <span>The winner is the player with the most correct answers</span>
+          </li>
+          <li class="flex items-start">
+            <span class="text-primary mr-2">•</span>
+            <span>All secret characters are revealed with their images</span>
+          </li>
+          <li class="flex items-start">
+            <span class="text-primary mr-2">•</span>
+            <span>Players can start a new game or return to the home page</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tips Section -->
+  <div class="tips-section rounded-lg p-6 mt-8">
+    <h3 class="text-xl font-bold text-white mb-4 flex items-center">
+      <span class="mr-3">💡</span>
+      Pro Tips
+    </h3>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="text-gray-300">
+        <h4 class="font-semibold text-white mb-2">Strategy</h4>
+        <ul class="space-y-1 text-sm">
+          <li>• Pay attention to attribute patterns</li>
+          <li>• Use process of elimination</li>
+          <li>• Remember common character traits</li>
+        </ul>
+      </div>
+      <div class="text-gray-300">
+        <h4 class="font-semibold text-white mb-2">Performance</h4>
+        <ul class="space-y-1 text-sm">
+          <li>• Speed matters - complete rounds quickly</li>
+          <li>• Accuracy is key for high scores</li>
+          <li>• Learn from each guess's feedback</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ready to Play -->
+  <div class="text-center mt-8">
+    <div class="ready-section rounded-lg p-6">
+      <h3 class="text-2xl font-bold text-white mb-4">Ready to Play?</h3>
+      <p class="text-gray-300 mb-6">
+        Now that you know how to play, gather your friends and test your anime
+        knowledge!
+      </p>
+      <a
+        href="/"
+        class="inline-block bg-primary hover:bg-primary-700 text-black px-8 py-3 rounded-lg font-medium transition-colors"
+      >
+        Start Playing
+      </a>
+    </div>
+  </div>
+</div>

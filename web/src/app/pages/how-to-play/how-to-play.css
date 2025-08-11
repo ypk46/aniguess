@@ -1,0 +1,82 @@
+/* Enhanced styling for the how-to-play page */
+
+.step-number {
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3);
+}
+
+.step-content {
+  position: relative;
+}
+
+.step-content::before {
+  content: "";
+  position: absolute;
+  left: 16px;
+  top: 60px;
+  bottom: -30px;
+  width: 2px;
+  background: linear-gradient(to bottom, #fbbf24, transparent);
+  z-index: -1;
+}
+
+.step-content:last-child::before {
+  display: none;
+}
+
+.hint-card {
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.hint-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.tips-section {
+  background: linear-gradient(
+    135deg,
+    rgba(251, 191, 36, 0.1),
+    rgba(245, 158, 11, 0.05)
+  );
+  border: 1px solid rgba(251, 191, 36, 0.2);
+}
+
+.ready-section {
+  background: linear-gradient(135deg, #1f2937, #374151);
+  border: 1px solid #4b5563;
+}
+
+/* Smooth scroll behavior */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .step-content::before {
+    left: 12px;
+  }
+
+  .grid-cols-1 {
+    gap: 1rem;
+  }
+}
