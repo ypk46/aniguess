@@ -1,7 +1,12 @@
 import { Component, inject, OnInit, HostListener } from '@angular/core';
 import { RoomService } from '../../shared/services/room.service';
 import { AnimeService } from '../../shared/services/anime.service';
-import { PlayerService, Room, CharacterAutocomplete } from '../../shared';
+import {
+  PlayerService,
+  Room,
+  CharacterAutocomplete,
+  Attribute,
+} from '../../shared';
 import { GuessResultMessage } from '../../shared/types/socket';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -37,7 +42,7 @@ export class RoomPage implements OnInit {
 
   // Game state tracking
   isSubmittingGuess = false;
-  lastGuessResult: {
+  guessHistory: Array<{
     isCorrect: boolean;
     characterName: string;
     attributeEvaluation?: Record<
@@ -47,7 +52,9 @@ export class RoomPage implements OnInit {
         value: any;
       }
     >;
-  } | null = null;
+    timestamp: string;
+  }> = [];
+  animeAttributes: Attribute[] = [];
 
   ngOnInit() {
     const room = this.roomService.getRoom();
@@ -66,6 +73,8 @@ export class RoomPage implements OnInit {
       // Load character names when game starts
       if (room.state === 'in_progress' && this.characters.length === 0) {
         this.loadCharacterNames();
+        // Clear guess history when game starts
+        this.guessHistory = [];
       }
     });
 
@@ -73,11 +82,14 @@ export class RoomPage implements OnInit {
     this.socket.on('guess-result', (data: GuessResultMessage) => {
       console.log('Guess result:', data);
       this.isSubmittingGuess = false;
-      this.lastGuessResult = {
+
+      // Add guess to history
+      this.guessHistory.unshift({
         isCorrect: data.isCorrect,
         characterName: data.characterName,
         attributeEvaluation: data.attributeEvaluation,
-      };
+        timestamp: data.timestamp,
+      });
 
       if (data.isCorrect) {
         console.log(
@@ -86,11 +98,6 @@ export class RoomPage implements OnInit {
       } else {
         console.log(`Incorrect guess: ${data.characterName}`);
       }
-
-      // Clear the result after 3 seconds
-      setTimeout(() => {
-        this.lastGuessResult = null;
-      }, 3000);
     });
 
     // Listen for round advancement
@@ -99,6 +106,8 @@ export class RoomPage implements OnInit {
       (data: { newRound: number; timestamp: string }) => {
         console.log('Advanced to round:', data.newRound);
         this.currentRound = data.newRound;
+        // Clear guess history for new round
+        this.guessHistory = [];
       },
     );
 
@@ -132,6 +141,22 @@ export class RoomPage implements OnInit {
         },
         error: (error) => {
           console.error('Error loading character names:', error);
+        },
+      });
+
+      // Also load anime attributes
+      this.loadAnimeAttributes();
+    }
+  }
+
+  loadAnimeAttributes() {
+    if (this.room?.animeId) {
+      this.animeService.getAttributesForAnime(this.room.animeId).subscribe({
+        next: (attributes) => {
+          this.animeAttributes = attributes;
+        },
+        error: (error) => {
+          console.error('Error loading anime attributes:', error);
         },
       });
     }
@@ -262,6 +287,14 @@ export class RoomPage implements OnInit {
     >,
   ): Array<{ key: string; value: { status: string; value: any } }> {
     return Object.entries(evaluation).map(([key, value]) => ({ key, value }));
+  }
+
+  // Helper method to get attribute display name
+  getAttributeDisplayName(attributeCode: string): string {
+    const attribute = this.animeAttributes.find(
+      (attr) => attr.code === attributeCode,
+    );
+    return attribute ? attribute.name : attributeCode;
   }
 
   @HostListener('document:click', ['$event'])
