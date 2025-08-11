@@ -31,6 +31,7 @@ export class SocketService {
     this.io.on('connection', (socket: Socket): void => {
       this.handleConnection(socket);
       this.handleGameStart(socket);
+      this.handleGuessSubmission(socket);
       this.handlePing(socket);
       this.handleDisconnection(socket);
       this.handleErrors(socket);
@@ -91,6 +92,9 @@ export class SocketService {
           // Store secret characters in Redis (separate from room data)
           await roomService.storeSecretCharacters(roomCode, secretCharacters);
 
+          // Initialize player responses for all players
+          await roomService.initializePlayerResponses(roomCode);
+
           // Start the game in the specified room
           await roomService.updateRoomState(roomCode, RoomState.IN_PROGRESS);
 
@@ -100,6 +104,80 @@ export class SocketService {
         } catch (error) {
           console.error('Error starting game:', error);
           socket.emit('error', { message: 'Failed to start game' });
+        }
+      }
+    );
+  }
+
+  /**
+   * Handle player guess submissions
+   */
+  private handleGuessSubmission(socket: Socket): void {
+    const roomService = new RoomService();
+
+    socket.on(
+      'submit-guess',
+      async (data: {
+        roomCode: string;
+        characterId: string;
+        characterName: string;
+      }): Promise<void> => {
+        try {
+          const { roomCode, characterId, characterName } = data;
+          const playerId = socket.id; // Player ID is the same as Socket ID
+
+          if (!roomCode || !characterId || !characterName) {
+            socket.emit('guess-error', {
+              message:
+                'Missing required fields: roomCode, characterId, or characterName',
+            });
+            return;
+          }
+
+          // Submit the guess
+          const result = await roomService.submitGuess(
+            roomCode,
+            playerId,
+            characterId,
+            characterName
+          );
+
+          // Send result back to the player
+          socket.emit('guess-result', {
+            isCorrect: result.isCorrect,
+            currentRound: result.currentRound,
+            characterName: characterName,
+            timestamp: new Date().toISOString(),
+          });
+
+          // Broadcast guess to other players in the room (without revealing if it's correct)
+          socket.to(`room:${roomCode}`).emit('player-guessed', {
+            playerId: playerId,
+            characterName: characterName,
+            currentRound: result.currentRound,
+            timestamp: new Date().toISOString(),
+          });
+
+          // If correct, player can advance to next round
+          if (result.isCorrect) {
+            const nextRound = await roomService.advancePlayerToNextRound(
+              roomCode,
+              playerId,
+              (await roomService.getRoomByCode(roomCode))?.roundTimer || 60
+            );
+
+            socket.emit('round-advanced', {
+              newRound: nextRound,
+              timestamp: new Date().toISOString(),
+            });
+          }
+
+          console.log(
+            `Player ${playerId} submitted guess: ${characterName} (${result.isCorrect ? 'CORRECT' : 'INCORRECT'})`
+          );
+        } catch (error) {
+          console.error('Error handling guess submission:', error);
+          socket.emit('guess-error', { message: 'Failed to submit guess' });
         }
       }
     );

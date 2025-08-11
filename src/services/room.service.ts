@@ -5,6 +5,8 @@ import { socketRegistry } from './socket-registry';
 export class RoomService {
   private readonly ROOM_KEY_PREFIX = 'room:';
   private readonly SECRET_CHARACTERS_KEY_PREFIX = 'room_secret:';
+  private readonly PLAYER_RESPONSE_KEY_PREFIX = 'player_response:';
+  private readonly CURRENT_ROUND_KEY_PREFIX = 'current_round:';
   private readonly ROOM_TTL = 3600 * 4; // 4 hours in seconds
   private readonly ROOM_CODE_LENGTH = 6;
 
@@ -49,6 +51,24 @@ export class RoomService {
    */
   private getSecretCharactersKey(code: string): string {
     return `${this.SECRET_CHARACTERS_KEY_PREFIX}${code}`;
+  }
+
+  /**
+   * Generate player response key for Redis
+   */
+  private getPlayerResponseKey(
+    roomCode: string,
+    playerId: string,
+    round: number
+  ): string {
+    return `${this.PLAYER_RESPONSE_KEY_PREFIX}${roomCode}:${playerId}:${round}`;
+  }
+
+  /**
+   * Generate current round key for Redis
+   */
+  private getCurrentRoundKey(roomCode: string, playerId: string): string {
+    return `${this.CURRENT_ROUND_KEY_PREFIX}${roomCode}:${playerId}`;
   }
 
   /**
@@ -301,14 +321,43 @@ export class RoomService {
    */
   async deleteRoom(code: string): Promise<boolean> {
     try {
+      const room = await this.getRoomByCode(code);
       const roomKey = this.getRoomKey(code);
       const secretKey = this.getSecretCharactersKey(code);
 
-      // Delete both room and secret characters
-      const roomResult = await redisClient.del(roomKey);
-      await redisClient.del(secretKey); // Don't check result for secret characters as they might not exist
+      const pipeline = redisClient.multi();
 
-      console.log(`Room ${code} deleted`);
+      // Delete room and secret characters
+      pipeline.del(roomKey);
+      pipeline.del(secretKey);
+
+      // Delete player response entries and current round entries for all players
+      if (room) {
+        for (const player of room.players) {
+          // Delete current round tracker
+          const currentRoundKey = this.getCurrentRoundKey(code, player.id);
+          pipeline.del(currentRoundKey);
+
+          // Delete response entries for all possible rounds
+          for (let round = 1; round <= room.rounds; round++) {
+            const responseKey = this.getPlayerResponseKey(
+              code,
+              player.id,
+              round
+            );
+            pipeline.del(responseKey);
+          }
+        }
+      }
+
+      const results = await pipeline.exec();
+      // Get result from first operation (room deletion)
+      const roomDeletionResult =
+        results && results[0] && Array.isArray(results[0]) ? results[0][1] : 0;
+      const roomResult =
+        typeof roomDeletionResult === 'number' ? roomDeletionResult : 0;
+
+      console.log(`Room ${code} and all associated player data deleted`);
       return roomResult === 1;
     } catch (error) {
       console.error('Error deleting room:', error);
@@ -360,6 +409,226 @@ export class RoomService {
       return JSON.parse(charactersData);
     } catch (error) {
       console.error('Error getting secret characters:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Initialize player responses for all players when game starts
+   */
+  async initializePlayerResponses(roomCode: string): Promise<void> {
+    try {
+      const room = await this.getRoomByCode(roomCode);
+      if (!room) {
+        throw new Error('Room not found');
+      }
+
+      const pipeline = redisClient.multi();
+
+      for (const player of room.players) {
+        // Initialize current round to 1 for each player
+        const currentRoundKey = this.getCurrentRoundKey(roomCode, player.id);
+        pipeline.set(currentRoundKey, '1');
+        pipeline.expire(currentRoundKey, this.ROOM_TTL);
+
+        // Initialize response entry for round 1
+        const responseKey = this.getPlayerResponseKey(roomCode, player.id, 1);
+        const initialResponse = {
+          playerId: player.id,
+          roomCode: roomCode,
+          round: 1,
+          guesses: [],
+          isCorrect: false,
+          timestamp: new Date().toISOString(),
+        };
+
+        pipeline.set(responseKey, JSON.stringify(initialResponse));
+      }
+
+      await pipeline.exec();
+      console.log(`Initialized player responses for room ${roomCode}`);
+    } catch (error) {
+      console.error('Error initializing player responses:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get current round for a player
+   */
+  async getCurrentRound(roomCode: string, playerId: string): Promise<number> {
+    try {
+      const currentRoundKey = this.getCurrentRoundKey(roomCode, playerId);
+      const round = await redisClient.get(currentRoundKey);
+      return round ? parseInt(round, 10) : 1;
+    } catch (error) {
+      console.error('Error getting current round:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Submit a guess for a player
+   */
+  async submitGuess(
+    roomCode: string,
+    playerId: string,
+    characterId: string,
+    characterName: string
+  ): Promise<{ isCorrect: boolean; currentRound: number }> {
+    try {
+      const room = await this.getRoomByCode(roomCode);
+      if (!room) {
+        throw new Error('Room not found');
+      }
+
+      if (room.state !== RoomState.IN_PROGRESS) {
+        throw new Error('Game is not in progress');
+      }
+
+      const currentRound = await this.getCurrentRound(roomCode, playerId);
+
+      if (currentRound > room.rounds) {
+        throw new Error('All rounds completed');
+      }
+
+      // Get secret characters for the room
+      const secretCharacters = await this.getSecretCharacters(roomCode);
+      if (!secretCharacters || secretCharacters.length < currentRound) {
+        throw new Error('Secret characters not found');
+      }
+
+      // Get the correct character for current round (0-indexed array)
+      const correctCharacter = secretCharacters[currentRound - 1];
+      const isCorrect = correctCharacter.id === characterId;
+
+      // Get current response entry
+      const responseKey = this.getPlayerResponseKey(
+        roomCode,
+        playerId,
+        currentRound
+      );
+      const responseData = await redisClient.get(responseKey);
+
+      let response;
+      if (responseData) {
+        response = JSON.parse(responseData);
+      } else {
+        // Create new response if it doesn't exist
+        response = {
+          playerId: playerId,
+          roomCode: roomCode,
+          round: currentRound,
+          guesses: [],
+          isCorrect: false,
+          timestamp: new Date().toISOString(),
+        };
+      }
+
+      // Add the guess
+      response.guesses.push({
+        characterId,
+        characterName,
+        timestamp: new Date().toISOString(),
+        isCorrect,
+      });
+
+      // Update correct flag if this guess is correct
+      if (isCorrect) {
+        response.isCorrect = true;
+      }
+
+      // Store updated response
+      await redisClient.set(responseKey, JSON.stringify(response));
+
+      // Set expiry based on round timer
+      const responseExpiry = room.roundTimer + 30; // Add 30 seconds buffer
+      await redisClient.expire(responseKey, responseExpiry);
+
+      console.log(
+        `Player ${playerId} guessed ${characterName} for round ${currentRound}: ${isCorrect ? 'CORRECT' : 'INCORRECT'}`
+      );
+
+      return { isCorrect, currentRound };
+    } catch (error) {
+      console.error('Error submitting guess:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get player response for a specific round
+   */
+  async getPlayerResponse(
+    roomCode: string,
+    playerId: string,
+    round: number
+  ): Promise<any | null> {
+    try {
+      const responseKey = this.getPlayerResponseKey(roomCode, playerId, round);
+      const responseData = await redisClient.get(responseKey);
+
+      if (!responseData) {
+        return null;
+      }
+
+      return JSON.parse(responseData);
+    } catch (error) {
+      console.error('Error getting player response:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Advance player to next round
+   */
+  async advancePlayerToNextRound(
+    roomCode: string,
+    playerId: string,
+    roundTimer: number
+  ): Promise<number> {
+    try {
+      const currentRound = await this.getCurrentRound(roomCode, playerId);
+      const nextRound = currentRound + 1;
+
+      const room = await this.getRoomByCode(roomCode);
+      if (!room) {
+        throw new Error('Room not found');
+      }
+
+      if (nextRound > room.rounds) {
+        console.log(`Player ${playerId} has completed all rounds`);
+        return currentRound;
+      }
+
+      // Update current round
+      const currentRoundKey = this.getCurrentRoundKey(roomCode, playerId);
+      await redisClient.set(currentRoundKey, nextRound.toString());
+      await redisClient.expire(currentRoundKey, this.ROOM_TTL);
+
+      // Initialize response entry for next round
+      const responseKey = this.getPlayerResponseKey(
+        roomCode,
+        playerId,
+        nextRound
+      );
+      const initialResponse = {
+        playerId: playerId,
+        roomCode: roomCode,
+        round: nextRound,
+        guesses: [],
+        isCorrect: false,
+        timestamp: new Date().toISOString(),
+      };
+
+      const responseExpiry = roundTimer + 30; // Add 30 seconds buffer
+      await redisClient.set(responseKey, JSON.stringify(initialResponse));
+      await redisClient.expire(responseKey, responseExpiry);
+
+      console.log(`Player ${playerId} advanced to round ${nextRound}`);
+      return nextRound;
+    } catch (error) {
+      console.error('Error advancing player to next round:', error);
       throw error;
     }
   }

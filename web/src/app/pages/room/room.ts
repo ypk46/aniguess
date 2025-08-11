@@ -34,6 +34,10 @@ export class RoomPage implements OnInit {
   showSuggestions = false;
   selectedSuggestionIndex = -1;
 
+  // Game state tracking
+  isSubmittingGuess = false;
+  lastGuessResult: { isCorrect: boolean; characterName: string } | null = null;
+
   ngOnInit() {
     const room = this.roomService.getRoom();
     if (!room) {
@@ -52,6 +56,67 @@ export class RoomPage implements OnInit {
       if (room.state === 'in_progress' && this.characters.length === 0) {
         this.loadCharacterNames();
       }
+    });
+
+    // Listen for guess result
+    this.socket.on(
+      'guess-result',
+      (data: {
+        isCorrect: boolean;
+        currentRound: number;
+        characterName: string;
+        timestamp: string;
+      }) => {
+        console.log('Guess result:', data);
+        this.isSubmittingGuess = false;
+        this.lastGuessResult = {
+          isCorrect: data.isCorrect,
+          characterName: data.characterName,
+        };
+
+        if (data.isCorrect) {
+          console.log(
+            `Correct! ${data.characterName} was the right answer for round ${data.currentRound}!`,
+          );
+        } else {
+          console.log(`Incorrect guess: ${data.characterName}`);
+        }
+
+        // Clear the result after 3 seconds
+        setTimeout(() => {
+          this.lastGuessResult = null;
+        }, 3000);
+      },
+    );
+
+    // Listen for round advancement
+    this.socket.on(
+      'round-advanced',
+      (data: { newRound: number; timestamp: string }) => {
+        console.log('Advanced to round:', data.newRound);
+        this.currentRound = data.newRound;
+      },
+    );
+
+    // Listen for other players' guesses
+    this.socket.on(
+      'player-guessed',
+      (data: {
+        playerId: string;
+        characterName: string;
+        currentRound: number;
+        timestamp: string;
+      }) => {
+        console.log(
+          `Player ${data.playerId} guessed ${data.characterName} in round ${data.currentRound}`,
+        );
+      },
+    );
+
+    // Listen for guess errors
+    this.socket.on('guess-error', (data: { message: string }) => {
+      console.error('Guess error:', data.message);
+      alert(`Error: ${data.message}`);
     });
   }
 
@@ -147,7 +212,7 @@ export class RoomPage implements OnInit {
   }
 
   submitGuess() {
-    if (!this.guessInput.trim()) {
+    if (!this.guessInput.trim() || this.isSubmittingGuess) {
       return;
     }
 
@@ -166,8 +231,14 @@ export class RoomPage implements OnInit {
       }
     }
 
-    // TODO: Emit guess to server with character ID
-    console.log('Guessing:', this.guessInput, 'ID:', this.selectedCharacterId);
+    this.isSubmittingGuess = true;
+
+    // Emit guess to server with character ID
+    this.socket.emit('submit-guess', {
+      roomCode: this.room.code,
+      characterId: this.selectedCharacterId,
+      characterName: this.guessInput,
+    });
 
     // Reset input after guess
     this.guessInput = '';
