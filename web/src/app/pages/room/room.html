@@ -207,17 +207,17 @@
                           getAttributeDisplayName(item.key)
                         }}</span>
                         <div class="flex items-center space-x-1 ml-2">
-                          <span class="truncate max-w-20">{{
-                            item.value.value
+                          <span class="max-w-20">{{
+                            item.value.value.replaceAll(",", " ")
                           }}</span>
                           @if (item.value.status === "correct") {
                             <span class="text-green-600">✓</span>
                           } @else if (item.value.status === "partial") {
                             <span class="text-yellow-600">~</span>
                           } @else if (item.value.status === "higher") {
-                            <span class="text-blue-600 font-bold">↑</span>
-                          } @else if (item.value.status === "lower") {
                             <span class="text-blue-600 font-bold">↓</span>
+                          } @else if (item.value.status === "lower") {
+                            <span class="text-blue-600 font-bold">↑</span>
                           } @else {
                             <span class="text-red-600">✗</span>
                           }

@@ -535,8 +535,12 @@ export class RoomService {
           case AttributeMatchType.PARTIAL_MATCH:
             try {
               // Parse as arrays for partial matching
-              const guessedArray = JSON.parse(guessedValue);
-              const correctArray = JSON.parse(correctValue);
+              const guessedArray = guessedValue
+                .split(',')
+                .map((s: string) => s.trim());
+              const correctArray = correctValue
+                .split(',')
+                .map((s: string) => s.trim());
 
               if (Array.isArray(guessedArray) && Array.isArray(correctArray)) {
                 const intersection = guessedArray.filter(item =>
